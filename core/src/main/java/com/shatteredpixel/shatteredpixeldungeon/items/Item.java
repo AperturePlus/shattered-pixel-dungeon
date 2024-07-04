@@ -57,17 +57,44 @@ import java.util.Comparator;
 
 public class Item implements Bundlable {
 
+	/**
+	 * 字符串格式常量，用于将对象名称和等级拼接成字符串。
+	 */
 	protected static final String TXT_TO_STRING_LVL		= "%s %+d";
+	/**
+	 * 字符串格式常量，用于将对象名称和数量拼接成字符串。
+	 */
 	protected static final String TXT_TO_STRING_X		= "%s x%d";
-	
+
+	/**
+	 * 投掷动作完成所需的时间
+	 */
 	protected static final float TIME_TO_THROW		= 1.0f;
+	/**
+	 * 拾取动作完成所需的时间
+	 */
 	protected static final float TIME_TO_PICK_UP	= 1.0f;
+	/**
+	 * 丢弃动作完成所需的时间
+	 */
 	protected static final float TIME_TO_DROP		= 1.0f;
-	
+
+	/**
+	 * 动作命令常量：丢弃。
+	 */
 	public static final String AC_DROP		= "DROP";
+	/**
+	 * 动作命令常量：投掷。
+	 */
 	public static final String AC_THROW		= "THROW";
-	
+
+	/**
+	 * 默认动作，用于指示对象的默认行为模式。
+	 */
 	protected String defaultAction;
+	/**
+	 * 标志位，指示对象是否使用目标锁定机制。
+	 */
 	public boolean usesTargeting;
 
 	//TODO should these be private and accessed through methods?
@@ -85,7 +112,7 @@ public class Item implements Bundlable {
 	public boolean cursed;
 	public boolean cursedKnown;
 	
-	// Unique items persist through revival
+	// 独有物品死后保留
 	public boolean unique = false;
 
 	// These items are preserved even if the hero's inventory is lost via unblessed ankh
@@ -102,19 +129,38 @@ public class Item implements Bundlable {
 		}
 	};
 	
+	/**
+	 * 获取英雄可执行的动作列表。
+	 * 此方法定义了英雄能够进行的特定动作，目前包括丢弃和投掷。
+	 *
+	 * @param hero 表示当前操作的英雄对象，该参数用于限定动作是针对特定英雄的。
+	 * @return 返回一个包含英雄可执行动作的字符串列表。列表中的每个元素代表一个动作。
+	 */
 	public ArrayList<String> actions( Hero hero ) {
-		ArrayList<String> actions = new ArrayList<>();
-		actions.add( AC_DROP );
-		actions.add( AC_THROW );
-		return actions;
+	    // 初始化一个ArrayList用于存储英雄可执行的动作
+	    ArrayList<String> actions = new ArrayList<>();
+	    // 添加“丢弃”动作到动作列表
+	    actions.add( AC_DROP );
+	    // 添加“投掷”动作到动作列表
+	    actions.add( AC_THROW );
+	    // 返回包含所有动作的列表
+	    return actions;
 	}
 
 	public String actionName(String action, Hero hero){
 		return Messages.get(this, "ac_" + action);
 	}
 
+	/**
+	 * 设置商品的数量。
+	 *
+	 * 该方法用于更新商品实例的库存数量。通过传入新的数量值，可以精确地控制商品的库存水平。
+	 * 对于库存管理来说，这是一个关键的操作，确保了库存数据的准确性和实时性。
+	 *
+	 * @param quantity 商品的新数量。这个参数代表了商品的库存量，用于更新现有的库存水平。
+	 */
 	public void setQuantity(int quantity){
-		this.quantity = quantity;
+	    this.quantity = quantity;
 	}
 	public int getQuantity(int quantity){
 		return quantity;
@@ -123,23 +169,49 @@ public class Item implements Bundlable {
 		return doPickUp( hero, hero.pos );
 	}
 
+	/**
+	 * 尝试让英雄捡起物品。
+	 *
+	 * 此方法用于模拟英雄捡起背包中物品的行为。它首先检查是否可以收集物品，
+	 * 如果可以，则执行捡起物品的一系列操作，包括更新游戏场景、播放音效、
+	 * 计算捡起物品所需的时间，并最终返回捡起成功的结果。如果不能收集物品，
+	 * 则返回捡起失败的结果。
+	 *
+	 * @param hero 参与捡起操作的英雄对象。
+	 * @param pos 捡起物品的位置索引。
+	 * @return 如果物品成功被捡起，则返回true；否则返回false。
+	 */
 	public boolean doPickUp(Hero hero, int pos) {
-		if (collect( hero.belongings.backpack )) {
-			
-			GameScene.pickUp( this, pos );
-			Sample.INSTANCE.play( Assets.Sounds.ITEM );
-			hero.spendAndNext( TIME_TO_PICK_UP );
-			return true;
-			
-		} else {
-			return false;
-		}
+	    // 检查是否可以收集背包中的物品
+	    if (collect(hero.belongings.backpack)) {
+	        // 更新游戏场景，表示物品已被捡起
+	        GameScene.pickUp(this, pos);
+	        // 播放捡起物品的音效
+	        Sample.INSTANCE.play(Assets.Sounds.ITEM);
+	        // 让英雄消耗时间并进入下一个动作
+	        hero.spendAndNext(TIME_TO_PICK_UP);
+	        // 返回捡起成功
+	        return true;
+	    } else {
+	        // 返回捡起失败
+	        return false;
+	    }
 	}
-	
+	/**
+	 * 让英雄丢弃背包中的所有物品。
+	 * <p>
+	 * 此方法模拟了英雄丢弃物品的过程。它首先消耗掉英雄丢弃物品所需的时间，然后确定物品掉落的位置，
+	 * 最后将英雄背包中的所有物品掉落至地牢中相应的位置。
+	 *
+	 * @param hero 需要丢弃物品的英雄对象。
+	 */
 	public void doDrop( Hero hero ) {
-		hero.spendAndNext(TIME_TO_DROP);
-		int pos = hero.pos;
-		Dungeon.level.drop(detachAll(hero.belongings.backpack), pos).sprite.drop(pos);
+	    // 消耗丢弃物品所需的时间，并进入下一游戏步骤
+	    hero.spendAndNext(TIME_TO_DROP);
+	    // 获取英雄当前的位置，用于确定物品掉落的位置
+	    int pos = hero.pos;
+	    // 从英雄的背包中分离出所有物品，然后在地牢中指定位置生成一个掉落物精灵
+	    Dungeon.level.drop(detachAll(hero.belongings.backpack), pos).sprite.drop(pos);
 	}
 
 	//resets an item's properties, to ensure consistency between runs
@@ -196,84 +268,110 @@ public class Item implements Bundlable {
 	}
 	
 	//takes two items and merges them (if possible)
-	public Item merge( Item other ){
-		if (isSimilar( other )){
-			quantity += other.quantity;
-			other.quantity = 0;
-		}
-		return this;
+	/**
+	 * 合并两个物品实例。
+	 * 如果两个物品相似（根据isSimilar方法的定义），则将它们的量合并，并将其中一个物品的量重置为0。
+	 * 这个方法体现了合并两个相同类型物品的操作，常用于库存管理或购物车合并同类商品。
+	 *
+	 * @param other 另一个物品实例，用于合并。
+	 * @return 返回合并后的当前物品实例。
+	 */
+	public Item merge(Item other) {
+	    // 检查两个物品是否相似
+	    if (isSimilar(other)) {
+	        // 如果相似，合并数量
+	        quantity += other.quantity;
+	        // 将被合并的物品数量重置为0，表示已合并
+	        other.quantity = 0;
+	    }
+	    // 返回合并后的当前物品实例
+	    return this;
 	}
 	
+	/**
+	 * 尝试将当前物品收集到容器中。
+	 *
+	 * @param container 目标收集容器。
+	 * @return 如果物品成功收集到容器中或者无法收集，则返回true；如果物品已经存在于容器中，则直接返回true。
+	 */
 	public boolean collect( Bag container ) {
+	    // 如果物品数量为0或更少，或者容器已满，则认为收集成功。
+	    if (quantity <= 0){
+	        return true;
+	    }
 
-		if (quantity <= 0){
-			return true;
-		}
+	    ArrayList<Item> items = container.items;
 
-		ArrayList<Item> items = container.items;
+	    // 如果物品已经存在于容器中，则直接返回true。
+	    if (items.contains( this )) {
+	        return true;
+	    }
 
-		if (items.contains( this )) {
-			return true;
-		}
+	    // 遍历容器中的每个物品，寻找可以容纳当前物品的子容器。
+	    for (Item item:items) {
+	        if (item instanceof Bag && ((Bag)item).canHold( this )) {
+	            if (collect( (Bag)item )){
+	                return true;
+	            }
+	        }
+	    }
 
-		for (Item item:items) {
-			if (item instanceof Bag && ((Bag)item).canHold( this )) {
-				if (collect( (Bag)item )){
-					return true;
-				}
-			}
-		}
+	    // 如果当前物品无法被容器容纳，则返回false。
+	    if (!container.canHold(this)){
+	        return false;
+	    }
 
-		if (!container.canHold(this)){
-			return false;
-		}
-		
-		if (stackable) {
-			for (Item item:items) {
-				if (isSimilar( item )) {
-					item.merge( this );
-					item.updateQuickslot();
-					if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
-						Badges.validateItemLevelAquired( this );
-						Talent.onItemCollected(Dungeon.hero, item);
-						if (isIdentified()) Catalog.setSeen(getClass());
-					}
-					if (TippedDart.lostDarts > 0){
-						Dart d = new Dart();
-						d.quantity(TippedDart.lostDarts);
-						TippedDart.lostDarts = 0;
-						if (!d.collect()){
-							//have to handle this in an actor as we can't manipulate the heap during pickup
-							Actor.add(new Actor() {
-								{ actPriority = VFX_PRIO; }
-								@Override
-								protected boolean act() {
-									Dungeon.level.drop(d, Dungeon.hero.pos).sprite.drop();
-									Actor.remove(this);
-									return true;
-								}
-							});
-						}
-					}
-					return true;
-				}
-			}
-		}
+	    // 如果物品是可堆叠的，则尝试合并到相同的物品上。
+	    if (stackable) {
+	        for (Item item:items) {
+	            if (isSimilar( item )) {
+	                item.merge( this );
+	                item.updateQuickslot();
+	                // 处理英雄存活且物品被收集时的逻辑，包括验证物品等级、触发收集事件等。
+	                if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
+	                    Badges.validateItemLevelAquired( this );
+	                    Talent.onItemCollected(Dungeon.hero, item);
+	                    if (isIdentified()) Catalog.setSeen(getClass());
+	                }
+	                // 处理飞镖的情况，如果存在未收集的飞镖，则创建并尝试收集飞镖。
+	                if (TippedDart.lostDarts > 0){
+	                    Dart d = new Dart();
+	                    d.quantity(TippedDart.lostDarts);
+	                    TippedDart.lostDarts = 0;
+	                    if (!d.collect()){
+	                        // 在无法直接收集飞镖时，通过延迟动作的方式处理飞镖的掉落。
+	                        //have to handle this in an actor as we can't manipulate the heap during pickup
+	                        Actor.add(new Actor() {
+	                            { actPriority = VFX_PRIO; }
+	                            @Override
+	                            protected boolean act() {
+	                                Dungeon.level.drop(d, Dungeon.hero.pos).sprite.drop();
+	                                Actor.remove(this);
+	                                return true;
+	                            }
+	                        });
+	                    }
+	                }
+	                return true;
+	            }
+	        }
+	    }
 
-		if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
-			Badges.validateItemLevelAquired( this );
-			Talent.onItemCollected( Dungeon.hero, this );
-			if (isIdentified()) Catalog.setSeen(getClass());
-		}
+	    // 处理英雄存活且物品被收集时的逻辑，包括验证物品等级、触发收集事件等。
+	    if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
+	        Badges.validateItemLevelAquired( this );
+	        Talent.onItemCollected( Dungeon.hero, this );
+	        if (isIdentified()) Catalog.setSeen(getClass());
+	    }
 
-		items.add( this );
-		Dungeon.quickslot.replacePlaceholder(this);
-		Collections.sort( items, itemComparator );
-		updateQuickslot();
-		return true;
+	    // 将物品添加到容器中，并进行排序以保持容器内物品的有序性。
+	    items.add( this );
+	    Dungeon.quickslot.replacePlaceholder(this);
+	    Collections.sort( items, itemComparator );
+	    updateQuickslot();
+	    return true;
 
 	}
-	
 	public boolean collect() {
 		return collect( Dungeon.hero.belongings.backpack );
 	}
@@ -576,100 +674,145 @@ public class Item implements Bundlable {
 		bundle.put( KEPT_LOST, keptThoughLostInvent );
 	}
 	
+	/**
+	 * 从保存的Bundle中恢复物品状态。
+	 * 此方法用于从保存的Bundle中恢复物品的多种属性，包括数量、已知等级、诅咒状态等。
+	 * 它还根据Bundle中的等级值处理物品的升级或降级。
+	 * 另外，它会检查并恢复物品在快速栏的分配状态以及丢失时的保留状态。
+	 *
+	 * @param bundle 包含物品保存状态的Bundle对象。
+	 */
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
-		quantity	= bundle.getInt( QUANTITY );
-		levelKnown	= bundle.getBoolean( LEVEL_KNOWN );
-		cursedKnown	= bundle.getBoolean( CURSED_KNOWN );
-		
+		// 从Bundle中恢复基本属性
+		quantity	= bundle.getInt( QUANTITY ); // 恢复物品数量
+		levelKnown	= bundle.getBoolean( LEVEL_KNOWN ); // 恢复是否已知等级
+		cursedKnown	= bundle.getBoolean( CURSED_KNOWN ); // 恢复是否已知诅咒状态
+
+		// 根据Bundle中的等级信息进行升级或降级处理
 		int level = bundle.getInt( LEVEL );
 		if (level > 0) {
-			upgrade( level );
+			upgrade( level ); // 升级物品
 		} else if (level < 0) {
-			degrade( -level );
+			degrade( -level ); // 降级物品
 		}
-		
-		cursed	= bundle.getBoolean( CURSED );
 
-		//only want to populate slot on first load.
+		cursed	= bundle.getBoolean( CURSED ); // 恢复诅咒状态
+
+		// 物品首次加载时设置快速使用栏位
 		if (Dungeon.hero == null) {
 			if (bundle.contains(QUICKSLOT)) {
-				Dungeon.quickslot.setSlot(bundle.getInt(QUICKSLOT), this);
+				Dungeon.quickslot.setSlot(bundle.getInt(QUICKSLOT), this); // 设置快速使用栏位
 			}
 		}
 
-		keptThoughLostInvent = bundle.getBoolean( KEPT_LOST );
+		keptThoughLostInvent = bundle.getBoolean( KEPT_LOST ); // 恢复丢失时保留状态
 	}
 
+
+	/**
+	 * 计算目标位置。
+	 * 本方法通过调用throwPos方法来确定英雄应该投掷到的目标位置。
+	 * @param user 当前操作的英雄对象。
+	 * @param dst 投掷目标的距离。
+	 * @return 投掷后预计命中的位置。
+	 */
 	public int targetingPos( Hero user, int dst ){
-		return throwPos( user, dst );
+	    return throwPos( user, dst );
 	}
 
+	/**
+	 * 计算投掷位置。
+	 * 本方法使用Ballistica类来模拟投掷轨迹，并返回轨迹与目标距离最近的碰撞位置。
+	 * @param user 当前操作的英雄对象。
+	 * @param dst 投掷目标的距离。
+	 * @return 投掷后预计命中的位置。
+	 */
 	public int throwPos( Hero user, int dst){
-		return new Ballistica( user.pos, dst, Ballistica.PROJECTILE ).collisionPos;
+	    return new Ballistica( user.pos, dst, Ballistica.PROJECTILE ).collisionPos;
 	}
 
+	/**
+	 * 播放投掷声音。
+	 * 本方法通过Sample类播放投掷动作对应的音效。
+	 */
 	public void throwSound(){
-		Sample.INSTANCE.play(Assets.Sounds.MISS, 0.6f, 0.6f, 1.5f);
+	    Sample.INSTANCE.play(Assets.Sounds.MISS, 0.6f, 0.6f, 1.5f);
 	}
-	
+	/**
+	 * 执行投掷动作的函数，用于英雄投掷物品。
+	 * @param user 投掷的英雄。
+	 * @param dst 目标位置。
+	 */
 	public void cast( final Hero user, final int dst ) {
-		
-		final int cell = throwPos( user, dst );
-		user.sprite.zap( cell );
-		user.busy();
+	    // 计算投掷后物品的位置。
+	    final int cell = throwPos( user, dst );
+	    // 触发投掷动画。
+	    user.sprite.zap( cell );
+	    // 设置英雄为忙碌状态，防止其他操作。
+	    user.busy();
 
-		throwSound();
+	    // 播放投掷声音。
+	    throwSound();
 
-		Char enemy = Actor.findChar( cell );
-		QuickSlotButton.target(enemy);
-		
-		final float delay = castDelay(user, dst);
+	    // 查找目标位置的敌人。
+	    Char enemy = Actor.findChar( cell );
+	    // 设置快捷槽的目标为找到的敌人。
+	    QuickSlotButton.target(enemy);
 
-		if (enemy != null) {
-			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
-					reset(user.sprite,
-							enemy.sprite,
-							this,
-							new Callback() {
-						@Override
-						public void call() {
-							curUser = user;
-							Item i = Item.this.detach(user.belongings.backpack);
-							if (i != null) i.onThrow(cell);
-							if (curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
-									&& !(Item.this instanceof MissileWeapon)
-									&& curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null){
-								if (enemy != null && enemy.alignment != curUser.alignment){
+	    // 计算投掷延迟。
+	    final float delay = castDelay(user, dst);
+
+	    if (enemy != null) {
+	        // 如果有敌人，创建并发射导弹，命中后执行回调。
+	        ((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
+	                reset(user.sprite,
+	                        enemy.sprite,
+	                        this,
+	                        new Callback() {
+	                    @Override
+	                    public void call() {
+	                        // 设置当前操作的用户。
+	                        curUser = user;
+	                        // 从用户背包中移除并处理投掷的物品。
+	                        Item i = Item.this.detach(user.belongings.backpack);
+	                        if (i != null) i.onThrow(cell);
+	                        // 处理Improvised Projectiles天赋，为敌人施加Blindness效果。
+	                        if (curUser.hasTalent(Talent.IMPROVISED_PROJECTILES)
+	                                && !(Item.this instanceof MissileWeapon)
+	                                && curUser.buff(Talent.ImprovisedProjectileCooldown.class) == null){
+	                            if (enemy != null && enemy.alignment != curUser.alignment){
 									Sample.INSTANCE.play(Assets.Sounds.HIT);
-									Buff.affect(enemy, Blindness.class, 1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
-									Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);
-								}
-							}
-							if (user.buff(Talent.LethalMomentumTracker.class) != null){
-								user.buff(Talent.LethalMomentumTracker.class).detach();
-								user.next();
-							} else {
-								user.spendAndNext(delay);
-							}
-						}
-					});
-		} else {
+	                                Buff.affect(enemy, Blindness.class, 1f + curUser.pointsInTalent(Talent.IMPROVISED_PROJECTILES));
+	                                Buff.affect(curUser, Talent.ImprovisedProjectileCooldown.class, 50f);
+	                            }
+	                        }
+	                        // 处理Lethal Momentum天赋，移除相关Buff并进入下一轮动作。
+	                        if (user.buff(Talent.LethalMomentumTracker.class) != null){
+	                            user.buff(Talent.LethalMomentumTracker.class).detach();
+	                            user.next();
+	                        } else {
+	                            // 没有特殊天赋效果，正常消耗时间进入下一轮动作。
+	                            user.spendAndNext(delay);
+	                        }
+	                    }
+	                });
+	    } else {
+	        // 如果没有敌人，直接创建并发射导弹，命中地面后执行回调。
 			((MissileSprite) user.sprite.parent.recycle(MissileSprite.class)).
 					reset(user.sprite,
 							cell,
 							this,
-							new Callback() {
-						@Override
-						public void call() {
-							curUser = user;
-							Item i = Item.this.detach(user.belongings.backpack);
-							user.spend(delay);
-							if (i != null) i.onThrow(cell);
-							user.next();
-						}
-					});
-		}
+                            () -> {
+								// 设置当前操作的用户
+                                curUser = user;
+								// 从用户背包中移除并处理投掷的物品
+                                Item i = Item.this.detach(user.belongings.backpack);
+                                user.spend(delay);
+                                if (i != null) i.onThrow(cell);
+                                user.next();
+                            });
+	    }
 	}
 	
 	public float castDelay( Char user, int dst ){
@@ -678,16 +821,34 @@ public class Item implements Bundlable {
 	
 	protected static Hero curUser = null;
 	protected static Item curItem = null;
+	/**
+	 * 用于抛出选择项的CellSelector监听器。
+	 * 当用户在CellSelector中进行选择时，此监听器将触发相应的行为。
+	 * 它是匿名内部类的实例，实现了CellSelector.Listener接口。
+	 */
 	protected static CellSelector.Listener thrower = new CellSelector.Listener() {
-		@Override
-		public void onSelect( Integer target ) {
-			if (target != null) {
-				curItem.cast( curUser, target );
-			}
-		}
-		@Override
-		public String prompt() {
-			return Messages.get(Item.class, "prompt");
-		}
+	    /**
+	     * 当用户选择一个项时调用此方法。
+	     * 如果用户选择了有效的目标（非null），则尝试对当前用户使用当前物品对选定目标进行操作。
+	     *
+	     * @param target 用户选择的目标，可能为null。
+	     */
+	    @Override
+	    public void onSelect(Integer target) {
+	        if (target != null) {
+	            curItem.cast(curUser, target);
+	        }
+	    }
+
+	    /**
+	     * 提供一个提示信息，该信息将在CellSelector显示之前显示给用户。
+	     * 这个提示信息是从资源文件中获取的，以支持多语言。
+	     *
+	     * @return 当前项目的提示信息。
+	     */
+	    @Override
+	    public String prompt() {
+	        return Messages.get(Item.class, "prompt");
+	    }
 	};
 }

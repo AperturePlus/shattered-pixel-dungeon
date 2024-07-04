@@ -178,41 +178,64 @@ public class Hero extends Char {
 		alignment = Alignment.ALLY;
 	}
 	
+	// 定义英雄的最大等级
 	public static final int MAX_LEVEL = 30;
 
+	// 定义英雄初始的力量值
 	public static final int STARTING_STR = 10;
-	
-	private static final float TIME_TO_REST		    = 1f;
-	private static final float TIME_TO_SEARCH	    = 2f;
-	private static final float HUNGER_FOR_SEARCH	= 6f;
-	
+
+	// 定义休息时恢复体力所需的时间
+	private static final float TIME_TO_REST = 1f;
+	// 定义搜索时消耗的时间
+	private static final float TIME_TO_SEARCH = 2f;
+	// 定义搜索时增加的饥饿度
+	private static final float HUNGER_FOR_SEARCH = 6f;
+
+	// 定义英雄的职业
 	public HeroClass heroClass = HeroClass.ROGUE;
+	// 定义英雄的副职业
 	public HeroSubClass subClass = HeroSubClass.NONE;
+	// 定义英雄的护甲技能
 	public ArmorAbility armorAbility = null;
+	// 定义英雄的天赋列表
 	public ArrayList<LinkedHashMap<Talent, Integer>> talents = new ArrayList<>();
+	// 定义英雄的变形天赋列表
 	public LinkedHashMap<Talent, Talent> metamorphedTalents = new LinkedHashMap<>();
-	
+
+	// 定义英雄的攻击技能值
 	private int attackSkill = 10;
+	// 定义英雄的防御技能值
 	private int defenseSkill = 5;
 
+	// 标记英雄是否准备就绪
 	public boolean ready = false;
+	// 标记英雄是否因受伤中断行动
 	public boolean damageInterrupt = true;
+	// 定义英雄当前的行动
 	public HeroAction curAction = null;
+	// 定义英雄上一个行动
 	public HeroAction lastAction = null;
 
+	// 定义英雄当前面对的敌人
 	private Char enemy;
-	
+
+	// 标记英雄是否处于休息状态
 	public boolean resting = false;
-	
+
+	// 定义英雄的装备
 	public Belongings belongings;
-	
+
+	// 定义英雄的力量值
 	public int STR;
-	
+
+	// 定义英雄的警觉性
 	public float awareness;
-	
+
+	// 定义英雄的等级
 	public int lvl = 1;
+	// 定义英雄的经验值
 	public int exp = 0;
-	
+
 	public int HTBoost = 0;
 	
 	private ArrayList<Mob> visibleEnemies;
@@ -221,49 +244,75 @@ public class Hero extends Char {
 	// for enemies we know we aren't seeing normally, resulting in better performance
 	public ArrayList<Mob> mindVisionEnemies = new ArrayList<>();
 
+	/**
+	 * 英雄类的构造函数，用于初始化英雄的属性和装备。
+	 */
 	public Hero() {
-		super();
+	    super();
 
-		HP = HT = 20;
-		STR = STARTING_STR;
-		
-		belongings = new Belongings( this );
-		
-		visibleEnemies = new ArrayList<>();
+	    // 初始化英雄的生命值和最大生命值
+	    HP = HT = 20;
+	    // 初始化英雄的力量值为预设值
+	    STR = STARTING_STR;
+
+	    // 创建英雄的装备栏
+	    belongings = new Belongings( this );
+
+	    // 初始化可见敌人的列表
+	    visibleEnemies = new ArrayList<>();
 	}
-	
+
+	/**
+	 * 更新英雄的最大生命值和当前生命值。
+	 * @param boostHP 是否同时增加当前生命值
+	 */
 	public void updateHT( boolean boostHP ){
-		int curHT = HT;
-		
-		HT = 20 + 5*(lvl-1) + HTBoost;
-		float multiplier = RingOfMight.HTMultiplier(this);
-		HT = Math.round(multiplier * HT);
-		
-		if (buff(ElixirOfMight.HTBoost.class) != null){
-			HT += buff(ElixirOfMight.HTBoost.class).boost();
-		}
-		
-		if (boostHP){
-			HP += Math.max(HT - curHT, 0);
-		}
-		HP = Math.min(HP, HT);
+	    // 保存当前最大生命值
+	    int curHT = HT;
+
+	    // 计算新的最大生命值
+	    HT = 20 + 5*(lvl-1) + HTBoost;
+	    // 应用力量戒指的生命值加成
+	    float multiplier = RingOfMight.HTMultiplier(this);
+	    HT = Math.round(multiplier * HT);
+
+	    // 应用药水的生命值加成
+	    if (buff(ElixirOfMight.HTBoost.class) != null){
+	        HT += buff(ElixirOfMight.HTBoost.class).boost();
+	    }
+
+	    // 如果需要，增加当前生命值
+	    if (boostHP){
+	        HP += Math.max(HT - curHT, 0);
+	    }
+	    // 确保当前生命值不超过最大生命值
+	    HP = Math.min(HP, HT);
 	}
 
+	/**
+	 * 计算英雄的最终力量值。
+	 * @return 英雄的最终力量值
+	 */
 	public int STR() {
-		int strBonus = 0;
+	    // 初始化力量加成
+	    int strBonus = 0;
 
-		strBonus += RingOfMight.strengthBonus( this );
-		
-		AdrenalineSurge buff = buff(AdrenalineSurge.class);
-		if (buff != null){
-			strBonus += buff.boost();
-		}
+	    // 应用力量戒指的力量加成
+	    strBonus += RingOfMight.strengthBonus( this );
 
-		if (hasTalent(Talent.STRONGMAN)){
-			strBonus += (int)Math.floor(STR * (0.03f + 0.05f*pointsInTalent(Talent.STRONGMAN)));
-		}
+	    // 检查并应用肾上腺素激增的加成
+	    AdrenalineSurge buff = buff(AdrenalineSurge.class);
+	    if (buff != null){
+	        strBonus += buff.boost();
+	    }
 
-		return STR + strBonus;
+	    // 如果拥有壮汉天赋，增加力量加成
+	    if (hasTalent(Talent.STRONGMAN)){
+	        strBonus += (int)Math.floor(STR * (0.03f + 0.05f*pointsInTalent(Talent.STRONGMAN)));
+	    }
+
+	    // 返回最终力量值
+	    return STR + strBonus;
 	}
 
 	private static final String CLASS       = "class";
@@ -277,50 +326,70 @@ public class Hero extends Char {
 	private static final String EXPERIENCE	= "exp";
 	private static final String HTBOOST     = "htboost";
 	
+	/**
+	 * 将英雄的状态信息存储到Bundle中。
+	 * 这包括基本属性、技能、天赋和装备等信息，以便于在需要时恢复英雄的状态。
+	 *
+	 * @param bundle 用于存储英雄状态信息的Bundle对象。
+	 */
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 
-		super.storeInBundle( bundle );
+	    // 调用父类方法，存储父类状态信息
+	    super.storeInBundle( bundle );
 
-		bundle.put( CLASS, heroClass );
-		bundle.put( SUBCLASS, subClass );
-		bundle.put( ABILITY, armorAbility );
-		Talent.storeTalentsInBundle( bundle, this );
-		
-		bundle.put( ATTACK, attackSkill );
-		bundle.put( DEFENSE, defenseSkill );
-		
-		bundle.put( STRENGTH, STR );
-		
-		bundle.put( LEVEL, lvl );
-		bundle.put( EXPERIENCE, exp );
-		
-		bundle.put( HTBOOST, HTBoost );
+	    // 存储英雄的基础属性
+	    bundle.put( CLASS, heroClass );
+	    bundle.put( SUBCLASS, subClass );
+	    bundle.put( ABILITY, armorAbility );
+	    Talent.storeTalentsInBundle( bundle, this );
 
-		belongings.storeInBundle( bundle );
+	    bundle.put( ATTACK, attackSkill );
+	    bundle.put( DEFENSE, defenseSkill );
+
+	    bundle.put( STRENGTH, STR );
+
+	    // 存储英雄的等级和经验
+	    bundle.put( LEVEL, lvl );
+	    bundle.put( EXPERIENCE, exp );
+
+	    bundle.put( HTBOOST, HTBoost );
+
+	    // 存储英雄的装备和物品
+	    belongings.storeInBundle( bundle );
 	}
-	
+
+	/**
+	 * 从Bundle中恢复英雄的状态信息。
+	 * 这是storeInBundle的逆操作，用于在英雄创建或加载时恢复其状态。
+	 *
+	 * @param bundle 包含英雄状态信息的Bundle对象。
+	 */
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 
-		lvl = bundle.getInt( LEVEL );
-		exp = bundle.getInt( EXPERIENCE );
+	    // 恢复英雄的等级和经验
+	    lvl = bundle.getInt( LEVEL );
+	    exp = bundle.getInt( EXPERIENCE );
 
-		HTBoost = bundle.getInt(HTBOOST);
+	    HTBoost = bundle.getInt(HTBOOST);
 
-		super.restoreFromBundle( bundle );
+	    // 调用父类方法，恢复父类状态信息
+	    super.restoreFromBundle( bundle );
 
-		heroClass = bundle.getEnum( CLASS, HeroClass.class );
-		subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );
-		armorAbility = (ArmorAbility)bundle.get( ABILITY );
-		Talent.restoreTalentsFromBundle( bundle, this );
-		
-		attackSkill = bundle.getInt( ATTACK );
-		defenseSkill = bundle.getInt( DEFENSE );
-		
-		STR = bundle.getInt( STRENGTH );
+	    // 恢复英雄的基础属性
+	    heroClass = bundle.getEnum( CLASS, HeroClass.class );
+	    subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );
+	    armorAbility = (ArmorAbility)bundle.get( ABILITY );
+	    Talent.restoreTalentsFromBundle( bundle, this );
 
-		belongings.restoreFromBundle( bundle );
+	    attackSkill = bundle.getInt( ATTACK );
+	    defenseSkill = bundle.getInt( DEFENSE );
+
+	    STR = bundle.getInt( STRENGTH );
+
+	    // 恢复英雄的装备和物品
+	    belongings.restoreFromBundle( bundle );
 	}
 	
 	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
@@ -335,82 +404,154 @@ public class Hero extends Char {
 		Belongings.preview( info, bundle );
 	}
 
-	public boolean hasTalent( Talent talent ){
-		return pointsInTalent(talent) > 0;
+	/**
+	 * 检查是否为指定天赋投入了点数。
+	 *
+	 * @param talent 要检查的天赋。
+	 * @return 如果投入了点数，则返回true；否则返回false。
+	 */
+	public boolean hasTalent(Talent talent) {
+	    return pointsInTalent(talent) > 0;
 	}
 
-	public int pointsInTalent( Talent talent ){
-		for (LinkedHashMap<Talent, Integer> tier : talents){
-			for (Talent f : tier.keySet()){
-				if (f == talent) return tier.get(f);
-			}
-		}
-		return 0;
+	/**
+	 * 获取指定天赋上的点数投入。
+	 *
+	 * @param talent 要查询的天赋。
+	 * @return 投入在指定天赋上的点数。
+	 */
+	public int pointsInTalent(Talent talent) {
+	    for (LinkedHashMap<Talent, Integer> tier : talents) {
+	        for (Talent f : tier.keySet()) {
+	            if (f == talent) return tier.get(f);
+	        }
+	    }
+	    return 0;
 	}
 
-	public void upgradeTalent( Talent talent ){
-		for (LinkedHashMap<Talent, Integer> tier : talents){
-			for (Talent f : tier.keySet()){
-				if (f == talent) tier.put(talent, tier.get(talent)+1);
-			}
-		}
-		Talent.onTalentUpgraded(this, talent);
+	/**
+	 * 升级指定的天赋。
+	 *
+	 * @param talent 要升级的天赋。
+	 */
+	public void upgradeTalent(Talent talent) {
+	    for (LinkedHashMap<Talent, Integer> tier : talents) {
+	        for (Talent f : tier.keySet()) {
+	            if (f == talent) tier.put(talent, tier.get(talent) + 1);
+	        }
+	    }
+	    Talent.onTalentUpgraded(this, talent);
 	}
 
-	public int talentPointsSpent(int tier){
-		int total = 0;
-		for (int i : talents.get(tier-1).values()){
-			total += i;
-		}
-		return total;
+	/**
+	 * 计算指定层数中投入的天赋点总数。
+	 *
+	 * @param tier 要查询的天赋层数。
+	 * @return 指定层数中投入的天赋点总数。
+	 */
+	public int talentPointsSpent(int tier) {
+	    int total = 0;
+	    for (int i : talents.get(tier - 1).values()) {
+	        total += i;
+	    }
+	    return total;
 	}
 
-	public int talentPointsAvailable(int tier){
-		if (lvl < (Talent.tierLevelThresholds[tier] - 1)
-			|| (tier == 3 && subClass == HeroSubClass.NONE)
-			|| (tier == 4 && armorAbility == null)) {
-			return 0;
-		} else if (lvl >= Talent.tierLevelThresholds[tier+1]){
-			return Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);
-		} else {
-			return 1 + lvl - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);
-		}
+	/**
+	 * 计算在指定层数中可用的天赋点数。
+	 *
+	 * @param tier 要查询的天赋层数。
+	 * @return 在指定层数中可用的天赋点数。
+	 */
+	public int talentPointsAvailable(int tier) {
+	    if (lvl < (Talent.tierLevelThresholds[tier] - 1)
+	            || (tier == 3 && subClass == HeroSubClass.NONE)
+	            || (tier == 4 && armorAbility == null)) {
+	        return 0;
+	    } else if (lvl >= Talent.tierLevelThresholds[tier + 1]) {
+	        return Talent.tierLevelThresholds[tier + 1] - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);
+	    } else {
+	        return 1 + lvl - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);
+	    }
 	}
-
+	/**
+	 * 根据英雄的阶层计算其天赋点数奖励。
+	 * 达到特定条件时（如满足等级要求、在第三阶层拥有副职业、在第四阶层拥有装甲技能）可获得天赋点数。
+	 *
+	 * @param tier 天赋的阶层级别，用于判断获得额外天赋点数的条件。
+	 * @return 奖励的天赋点数，若符合条件则为2点，否则为0点。
+	 */
 	public int bonusTalentPoints(int tier){
+		// 检查英雄等级是否低于给定阶层的门槛，或在第三阶层没有副职业，或在第四阶层没有装甲技能，
 		if (lvl < (Talent.tierLevelThresholds[tier]-1)
 				|| (tier == 3 && subClass == HeroSubClass.NONE)
 				|| (tier == 4 && armorAbility == null)) {
 			return 0;
-		} else if (buff(PotionOfDivineInspiration.DivineInspirationTracker.class) != null
+		} // 若英雄拥有“神灵启示药水”的增益效果，并且在指定阶层得到增强，则返回2点天赋点数。
+		else if (buff(PotionOfDivineInspiration.DivineInspirationTracker.class) != null
 					&& buff(PotionOfDivineInspiration.DivineInspirationTracker.class).isBoosted(tier)) {
 			return 2;
 		} else {
 			return 0;
 		}
 	}
-	
+	/**
+	 * 获取英雄的类别名称，考虑是否有副职业。
+	 * 若无副职业或副职业为无，则直接返回主职业名称；若有副职业，则返回副职业名称。
+	 *
+	 * @return 英雄的类别名称，综合主职业与副职业信息。
+	 */
 	public String className() {
 		return subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title();
 	}
 
+	/**
+	 * 重写获取英雄名称的方法，直接调用className()以确保一致性。
+	 *
+	 * @return 英雄的名称，根据其类别和副职业确定。
+	 */
 	@Override
 	public String name(){
 		return className();
 	}
 
+	/**
+	 * 播放击打音效。
+	 * 根据角色当前状态和属性调整音效的音调，以提供更沉浸式的音频体验。
+	 * - 若角色并非徒手战斗，则播放装备武器的击打音效。
+	 * - 若角色徒手战斗且拥有力量戒指的加成，则根据力量加成调整音效音调。
+	 *   音调会随着力量每提升一点而下潜2.5%（累加），最低至原音高的75%。
+	 * - 若角色徒手战斗但无力量加成，则以略高一些的音调播放音效。
+	 *
+	 * @param pitch 音效的基础音调，将据此调整音效的频率。
+	 */
 	@Override
 	public void hitSound(float pitch) {
+		// 检查角色是否正在徒手战斗
 		if (!RingOfForce.fightingUnarmed(this)) {
+			// 若非徒手，播放当前攻击武器的击打音效
 			belongings.attackingWeapon().hitSound(pitch);
-		} else if (RingOfForce.getBuffedBonus(this, RingOfForce.Force.class) > 0) {
-			//pitch deepens by 2.5% (additive) per point of strength, down to 75%
-			super.hitSound( pitch * GameMath.gate( 0.75f, 1.25f - 0.025f*STR(), 1f) );
-		} else {
+		}
+
+		else if (RingOfForce.getBuffedBonus(this, RingOfForce.Force.class) > 0) {
+			// 根据力量调整音调，确保音调在0.75至1.0倍之间变化，模拟力量影响
+			super.hitSound(pitch * GameMath.gate(0.75f, 1.25f - 0.025f * STR(), 1f));
+		}
+
+		else {
+			// 若无力量加成，以1.1倍的音调播放标准击打音效
 			super.hitSound(pitch * 1.1f);
 		}
 	}
 
+	/**
+	 * 判断是否阻挡声音。
+	 * 如果当前装备的武器具有足够的防御因子，则播放格挡音效并返回true。
+	 * 否则，调用超类方法处理声音阻挡。
+	 *
+	 * @param pitch 声音的音高。
+	 * @return 如果成功阻挡声音，则为true；否则为false。
+	 */
 	@Override
 	public boolean blockSound(float pitch) {
 		if ( belongings.weapon() != null && belongings.weapon().defenseFactor(this) >= 4 ){
@@ -420,6 +561,11 @@ public class Hero extends Char {
 		return super.blockSound(pitch);
 	}
 
+	/**
+	 * 每轮更新时调用，用于处理生存相关的逻辑。
+	 * 移除所有不具有复活持续效果的增益效果。
+	 * 应用再生和饥饿增益效果。
+	 */
 	public void live() {
 		for (Buff b : buffs()){
 			if (!b.revivePersists) b.detach();
@@ -427,7 +573,15 @@ public class Hero extends Char {
 		Buff.affect( this, Regeneration.class );
 		Buff.affect( this, Hunger.class );
 	}
-	
+
+	/**
+	 * 获取角色穿戴的护甲的等级。
+	 * 如果穿戴的是类护甲，则返回6。
+	 * 否则，返回护甲本身的等级。
+	 * 如果没有穿戴护甲，则返回0。
+	 *
+	 * @return 护甲等级。
+	 */
 	public int tier() {
 		Armor armor = belongings.armor();
 		if (armor instanceof ClassArmor){
@@ -438,7 +592,16 @@ public class Hero extends Char {
 			return 0;
 		}
 	}
-	
+
+	/**
+	 * 尝试对敌人发射武器。
+	 * 设置当前敌人，判断是否命中。
+	 * 根据不同的英雄子类和命中情况，应用不同的增益效果。
+	 *
+	 * @param enemy 目标敌人。
+	 * @param wep 射击用的武器。
+	 * @return 如果命中，则返回true；否则返回false。
+	 */
 	public boolean shoot( Char enemy, MissileWeapon wep ) {
 
 		this.enemy = enemy;
@@ -462,14 +625,21 @@ public class Hero extends Char {
 
 		return hit;
 	}
-	
+
+	/**
+	 * 计算对目标的攻击技能值。
+	 * 考虑武器类型、精准度戒指的效果、武器的准确性因素以及特定天赋和增益效果。
+	 *
+	 * @param target 攻击的目标。
+	 * @return 计算后的攻击技能值。
+	 */
 	@Override
 	public int attackSkill( Char target ) {
 		KindOfWeapon wep = belongings.attackingWeapon();
-		
+
 		float accuracy = 1;
 		accuracy *= RingOfAccuracy.accuracyMultiplier( this );
-		
+
 		if (wep instanceof MissileWeapon){
 			if (Dungeon.level.adjacent( pos, target.pos )) {
 				accuracy *= (0.5f + 0.2f*pointsInTalent(Talent.POINT_BLANK));
@@ -481,110 +651,150 @@ public class Hero extends Char {
 		if (buff(Scimitar.SwordDance.class) != null){
 			accuracy *= 1.50f;
 		}
-		
+
 		if (!RingOfForce.fightingUnarmed(this)) {
 			return (int)(attackSkill * accuracy * wep.accuracyFactor( this, target ));
 		} else {
 			return (int)(attackSkill * accuracy);
 		}
 	}
-	
+
 	@Override
-	public int defenseSkill( Char enemy ) {
+	/**
+	 * 实施防御技能，计算闪避值。
+	 * @param enemy 攻击者，用于判断是否可以反击。
+	 * @return 返回闪避值，如果成功闪避则可能为无限闪避。
+	 */
+	public int defenseSkill(Char enemy) {
+	    // 如果拥有格挡 buff，且可以攻击敌人且未被敌人魅力影响，则施加反击 buff 并返回无限闪避。
+	    if (buff(Combo.ParryTracker.class) != null) {
+	        if (canAttack(enemy) && !isCharmedBy(enemy)) {
+	            Buff.affect(this, Combo.RiposteTracker.class).enemy = enemy;
+	        }
+	        return INFINITE_EVASION;
+	    }
 
-		if (buff(Combo.ParryTracker.class) != null){
-			if (canAttack(enemy) && !isCharmedBy(enemy)){
-				Buff.affect(this, Combo.RiposteTracker.class).enemy = enemy;
-			}
-			return INFINITE_EVASION;
-		}
+	    // 如果拥有圆盾守卫 buff，则返回无限闪避。
+	    if (buff(RoundShield.GuardTracker.class) != null) {
+	        return INFINITE_EVASION;
+	    }
 
-		if (buff(RoundShield.GuardTracker.class) != null){
-			return INFINITE_EVASION;
-		}
-		
-		float evasion = defenseSkill;
-		
-		evasion *= RingOfEvasion.evasionMultiplier( this );
+	    // 初始化闪避率为防御技能值。
+	    float evasion = defenseSkill;
 
-		if (buff(Talent.RestoredAgilityTracker.class) != null){
-			if (pointsInTalent(Talent.LIQUID_AGILITY) == 1){
-				evasion *= 4f;
-			} else if (pointsInTalent(Talent.LIQUID_AGILITY) == 2){
-				return INFINITE_EVASION;
-			}
-		}
+	    // 通过闪避戒指增加闪避率。
+	    evasion *= RingOfEvasion.evasionMultiplier(this);
 
-		if (buff(Quarterstaff.DefensiveStance.class) != null){
-			evasion *= 3;
-		}
-		
-		if (paralysed > 0) {
-			evasion /= 2;
-		}
+	    // 如果拥有恢复敏捷 buff，根据液体敏捷天赋等级增加闪避率或返回无限闪避。
+	    if (buff(Talent.RestoredAgilityTracker.class) != null) {
+	        if (pointsInTalent(Talent.LIQUID_AGILITY) == 1) {
+	            evasion *= 4f;
+	        } else if (pointsInTalent(Talent.LIQUID_AGILITY) == 2) {
+	            return INFINITE_EVASION;
+	        }
+	    }
 
-		if (belongings.armor() != null) {
-			evasion = belongings.armor().evasionFactor(this, evasion);
-		}
+	    // 如果处于长杆武器防御姿态，闪避率翻倍。
+	    if (buff(Quarterstaff.DefensiveStance.class) != null) {
+	        evasion *= 3;
+	    }
 
-		return Math.round(evasion);
+	    // 如果角色麻痹状态大于0，闪避率减半。
+	    if (paralysed > 0) {
+	        evasion /= 2;
+	    }
+
+	    // 如果装备了护甲，调整闪避率。
+	    if (belongings.armor() != null) {
+	        evasion = belongings.armor().evasionFactor(this, evasion);
+	    }
+
+	    // 返回计算后的闪避值（四舍五入为整数）。
+	    return Math.round(evasion);
 	}
 
+	/**
+	 * 根据当前的防御状态，返回防御动词，描述防御行为。
+	 * @return 防御行为的描述性词语。
+	 */
 	@Override
 	public String defenseVerb() {
-		Combo.ParryTracker parry = buff(Combo.ParryTracker.class);
-		if (parry != null){
-			parry.parried = true;
-			if (buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2){
-				parry.detach();
-			}
-			return Messages.get(Monk.class, "parried");
-		}
+	    // 如果拥有格挡 buff，更新格挡状态并根据combo情况决定是否移除buff，返回“格挡”描述。
+	    Combo.ParryTracker parry = buff(Combo.ParryTracker.class);
+	    if (parry != null) {
+	        parry.parried = true;
+	        if (buff(Combo.class).getComboCount() < 9 || pointsInTalent(Talent.ENHANCED_COMBO) < 2) {
+	            parry.detach();
+	        }
+	        return Messages.get(Monk.class, "parried");
+	    }
 
-		if (buff(RoundShield.GuardTracker.class) != null){
-			buff(RoundShield.GuardTracker.class).hasBlocked = true;
-			BuffIndicator.refreshHero();
-			Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));
-			return Messages.get(RoundShield.GuardTracker.class, "guarded");
-		}
+	    // 如果拥有圆盾守卫 buff，更新守卫状态，播放音效，返回“守卫”描述。
+	    if (buff(RoundShield.GuardTracker.class) != null) {
+	        buff(RoundShield.GuardTracker.class).hasBlocked = true;
+	        BuffIndicator.refreshHero();
+	        Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));
+	        return Messages.get(RoundShield.GuardTracker.class, "guarded");
+	    }
 
-		if (buff(MonkEnergy.MonkAbility.Focus.FocusActivation.class) != null){
-			buff(MonkEnergy.MonkAbility.Focus.FocusActivation.class).detach();
-			if (sprite != null && sprite.visible) {
-				Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));
-			}
-			return Messages.get(Monk.class, "parried");
-		}
+	    // 如果拥有专注激活 buff，移除buff，根据角色可见性播放音效，返回“格挡”描述。
+	    if (buff(MonkEnergy.MonkAbility.Focus.FocusActivation.class) != null) {
+	        buff(MonkEnergy.MonkAbility.Focus.FocusActivation.class).detach();
+	        if (sprite != null && sprite.visible) {
+	            Sample.INSTANCE.play(Assets.Sounds.HIT_PARRY, 1, Random.Float(0.96f, 1.05f));
+	        }
+	        return Messages.get(Monk.class, "parried");
+	    }
 
-		return super.defenseVerb();
+	    // 如果没有适用的防御buff，返回基础的防御动词。
+	    return super.defenseVerb();
 	}
-
+	/**
+	 * 滚动确定防御值（DR）的方法。
+	 * 该方法计算角色的总防御值，包括装备的护甲和武器提供的防御值，以及特殊能力的加成。
+	 * @return 计算后的总防御值。
+	 */
 	@Override
 	public int drRoll() {
-		int dr = super.drRoll();
+	    // 调用父类方法获取基础防御值
+	    int dr = super.drRoll();
 
-		if (belongings.armor() != null) {
-			int armDr = Char.combatRoll( belongings.armor().DRMin(), belongings.armor().DRMax());
-			if (STR() < belongings.armor().STRReq()){
-				armDr -= 2*(belongings.armor().STRReq() - STR());
-			}
-			if (armDr > 0) dr += armDr;
-		}
-		if (belongings.weapon() != null && !RingOfForce.fightingUnarmed(this))  {
-			int wepDr = Char.combatRoll( 0 , belongings.weapon().defenseFactor( this ) );
-			if (STR() < ((Weapon)belongings.weapon()).STRReq()){
-				wepDr -= 2*(((Weapon)belongings.weapon()).STRReq() - STR());
-			}
-			if (wepDr > 0) dr += wepDr;
-		}
+	    // 如果装备了护甲
+	    if (belongings.armor() != null) {
+	        // 根据护甲的DR范围随机生成护甲的防御值
+	        int armDr = Char.combatRoll(belongings.armor().DRMin(), belongings.armor().DRMax());
+	        // 如果力量不足，减少护甲提供的防御值
+	        if (STR() < belongings.armor().STRReq()) {
+	            armDr -= 2 * (belongings.armor().STRReq() - STR());
+	        }
+	        // 如果护甲防御值大于0，则累加到总防御值
+	        if (armDr > 0) {
+	            dr += armDr;
+	        }
+	    }
+	    // 如果装备了武器且不是在进行无武器战斗
+	    if (belongings.weapon() != null && !RingOfForce.fightingUnarmed(this)) {
+	        // 根据武器的防御因子计算武器提供的防御值
+	        int wepDr = Char.combatRoll(0, belongings.weapon().defenseFactor(this));
+	        // 如果力量不足，减少武器提供的防御值
+	        if (STR() < ((Weapon) belongings.weapon()).STRReq()) {
+	            wepDr -= 2 * (((Weapon) belongings.weapon()).STRReq() - STR());
+	        }
+	        // 如果武器防御值大于0，则累加到总防御值
+	        if (wepDr > 0) {
+	            dr += wepDr;
+	        }
+	    }
 
-		if (buff(HoldFast.class) != null){
-			dr += buff(HoldFast.class).armorBonus();
-		}
-		
-		return dr;
+	    // 如果启用了“Hold Fast”能力，增加相应的防御值加成
+	    if (buff(HoldFast.class) != null) {
+	        dr += buff(HoldFast.class).armorBonus();
+	    }
+
+	    // 返回计算后的总防御值
+	    return dr;
 	}
-	
+
 	@Override
 	public int damageRoll() {
 		KindOfWeapon wep = belongings.attackingWeapon();
@@ -620,7 +830,7 @@ public class Hero extends Char {
 		if (dmg < 0) dmg = 0;
 		return dmg;
 	}
-	
+
 	@Override
 	public float speed() {
 

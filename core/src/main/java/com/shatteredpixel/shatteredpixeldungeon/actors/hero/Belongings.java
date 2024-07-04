@@ -47,38 +47,63 @@ public class Belongings implements Iterable<Item> {
 
 	private Hero owner;
 
+	/**
+	 * 背包类，作为英雄的装备之一，用于存储物品。
+	 * 它扩展了Bag类，增加了特定于背包的特性，如容量计算。
+	 */
 	public static class Backpack extends Bag {
-		{
-			image = ItemSpriteSheet.BACKPACK;
-		}
-		public int capacity(){
-			int cap = super.capacity();
-			for (Item item : items){
-				if (item instanceof Bag){
-					cap++;
-				}
-			}
-			if (Dungeon.hero != null && Dungeon.hero.belongings.secondWep != null){
-				//secondary weapons still occupy an inv. slot
-				cap--;
-			}
-			return cap;
-		}
+
+	    {
+	        // 初始化背包的图像标识
+	        image = ItemSpriteSheet.BACKPACK;
+	    }
+
+	    /**
+	     * 计算背包的实际容量。
+	     * 背包的容量会根据是否装备了副武器进行动态调整。
+	     *
+	     * @return 背包的总容量，考虑了内部物品袋和副武器的影响。
+	     */
+	    public int capacity(){
+	        // 获取背包的基础容量
+	        int cap = super.capacity();
+	        // 遍历背包中的物品，增加内部物品袋的容量
+	        for (Item item : items){
+	            if (item instanceof Bag){
+	                cap++;
+	            }
+	        }
+	        // 如果英雄存在且装备了副武器，则减少一个容量单位
+	        if (Dungeon.hero != null && Dungeon.hero.belongings.secondWep != null){
+	            //副武器仍占一个格子
+	            cap--;
+	        }
+	        return cap;
+	    }
 	}
 
 	public Backpack backpack;
-	
+	/**
+	 * 构造函数，用于初始化 Belongings 类的实例。
+	 *
+	 * @param owner 英雄的所有者，用于关联装备和英雄。
+	 */
 	public Belongings( Hero owner ) {
 		this.owner = owner;
-		
+		// 初始化背包，并将其所有者设置为英雄
 		backpack = new Backpack();
 		backpack.owner = owner;
 	}
 
+	// 英雄持有的武器
 	public KindOfWeapon weapon = null;
+	// 英雄穿戴的护甲
 	public Armor armor = null;
+	// 英雄持有的神器
 	public Artifact artifact = null;
+	// 英雄持有的杂项物品
 	public KindofMisc misc = null;
+	// 英雄佩戴的戒指
 	public Ring ring = null;
 
 	//used when thrown weapons temporary become the current weapon
@@ -111,52 +136,90 @@ public class Belongings implements Iterable<Item> {
 		return lostInvent;
 	}
 
-	public KindOfWeapon weapon(){
-		if (!lostInventory() || (weapon != null && weapon.keptThroughLostInventory())){
-			return weapon;
-		} else {
-			return null;
-		}
+	/**
+	 * 检查是否失去装备。如果没有失去装备，或者装备被标记为在失去装备后仍保留，
+	 * 则返回该装备。否则返回null。
+	 *
+	 * @return 当前的武器装备，如果没有失去装备或装备被保留，则为null。
+	 */
+	public KindOfWeapon weapon() {
+	    if (!lostInventory() || (weapon != null && weapon.keptThroughLostInventory())) {
+	        return weapon;
+	    } else {
+	        return null;
+	    }
 	}
 
-	public Armor armor(){
-		if (!lostInventory() || (armor != null && armor.keptThroughLostInventory())){
-			return armor;
-		} else {
-			return null;
-		}
+	/**
+	 * 检查是否失去装备。如果没有失去装备，或者装备被标记为在失去装备后仍保留，
+	 * 则返回该装备。否则返回null。
+	 *
+	 * @return 当前的护甲装备，如果没有失去装备或装备被保留，则为null。
+	 */
+	public Armor armor() {
+	    if (!lostInventory() || (armor != null && armor.keptThroughLostInventory())) {
+	        return armor;
+	    } else {
+	        return null;
+	    }
 	}
 
-	public Artifact artifact(){
-		if (!lostInventory() || (artifact != null && artifact.keptThroughLostInventory())){
-			return artifact;
-		} else {
-			return null;
-		}
+	/**
+	 * 检查是否失去装备。如果没有失去装备，或者装备被标记为在失去装备后仍保留，
+	 * 则返回该装备。否则返回null。
+	 *
+	 * @return 当前的神器装备，如果没有失去装备或装备被保留，则为null。
+	 */
+	public Artifact artifact() {
+	    if (!lostInventory() || (artifact != null && artifact.keptThroughLostInventory())) {
+	        return artifact;
+	    } else {
+	        return null;
+	    }
 	}
 
-	public KindofMisc misc(){
-		if (!lostInventory() || (misc != null && misc.keptThroughLostInventory())){
-			return misc;
-		} else {
-			return null;
-		}
+	/**
+	 * 检查是否失去装备。如果没有失去装备，或者装备被标记为在失去装备后仍保留，
+	 * 则返回该装备。否则返回null。
+	 *
+	 * @return 当前的杂项装备，如果没有失去装备或装备被保留，则为null。
+	 */
+	public KindofMisc misc() {
+	    if (!lostInventory() || (misc != null && misc.keptThroughLostInventory())) {
+	        return misc;
+	    } else {
+	        return null;
+	    }
 	}
 
+	/**
+	 * 获取角色的戒指装备。
+	 * 如果角色没有失去装备，或者戒指装备在失去装备后仍被保留，则返回戒指装备。
+	 * 否则，返回null，表示角色没有可用的戒指装备。
+	 *
+	 * @return 当前角色的戒指装备，如果没有或不可用，则返回null。
+	 */
 	public Ring ring(){
-		if (!lostInventory() || (ring != null && ring.keptThroughLostInventory())){
-			return ring;
-		} else {
-			return null;
-		}
+	    if (!lostInventory() || (ring != null && ring.keptThroughLostInventory())){
+	        return ring;
+	    } else {
+	        return null;
+	    }
 	}
 
+	/**
+	 * 获取角色的第二件武器装备。
+	 * 如果角色没有失去装备，或者第二件武器装备在失去装备后仍被保留，则返回第二件武器装备。
+	 * 否则，返回null，表示角色没有可用的第二件武器装备。
+	 *
+	 * @return 当前角色的第二件武器装备，如果没有或不可用，则返回null。
+	 */
 	public KindOfWeapon secondWep(){
-		if (!lostInventory() || (secondWep != null && secondWep.keptThroughLostInventory())){
-			return secondWep;
-		} else {
-			return null;
-		}
+	    if (!lostInventory() || (secondWep != null && secondWep.keptThroughLostInventory())){
+	        return secondWep;
+	    } else {
+	        return null;
+	    }
 	}
 
 	// ***
@@ -169,100 +232,174 @@ public class Belongings implements Iterable<Item> {
 
 	private static final String SECOND_WEP = "second_wep";
 
+	/**
+	 * 将当前装备存储到一个Bundle中。
+	 * 此方法用于将角色当前装备的各类物品存储到Bundle中，以便于在游戏的其他部分或保存后重新加载。
+	 * @param bundle 用于存储装备的Bundle对象，通过此对象可以将装备信息在不同场景间传递。
+	 */
 	public void storeInBundle( Bundle bundle ) {
-		
-		backpack.storeInBundle( bundle );
-		
-		bundle.put( WEAPON, weapon );
-		bundle.put( ARMOR, armor );
-		bundle.put( ARTIFACT, artifact );
-		bundle.put( MISC, misc );
-		bundle.put( RING, ring );
-		bundle.put( SECOND_WEP, secondWep );
+	    // 将背包中的物品存储到Bundle中
+	    backpack.storeInBundle( bundle );
+
+	    // 逐个将当前装备的武器、护甲、神器、杂项、戒指和第二武器存储到Bundle中
+	    bundle.put( WEAPON, weapon );
+	    bundle.put( ARMOR, armor );
+	    bundle.put( ARTIFACT, artifact );
+	    bundle.put( MISC, misc );
+	    bundle.put( RING, ring );
+	    bundle.put( SECOND_WEP, secondWep );
 	}
 	
+	/**
+	 * 从Bundle中恢复角色装备。
+	 * 此方法用于在角色加载或重新创建时，从保存的Bundle中恢复角色的装备状态。
+	 * 它清空现有的背包，并从Bundle中逐一恢复各种装备，包括武器、护甲、饰品等。
+	 * 每种装备在恢复后都会尝试激活，以确保装备的功能可用。
+	 *
+	 * @param bundle 包含角色装备数据的Bundle对象，用于恢复角色装备状态。
+	 */
 	public void restoreFromBundle( Bundle bundle ) {
-		
-		backpack.clear();
-		backpack.restoreFromBundle( bundle );
-		
-		weapon = (KindOfWeapon) bundle.get(WEAPON);
-		if (weapon() != null)       weapon().activate(owner);
-		
-		armor = (Armor)bundle.get( ARMOR );
-		if (armor() != null)        armor().activate( owner );
+	    // 清空背包，以便重新从Bundle加载装备
+	    backpack.clear();
+	    // 背包自身从Bundle中恢复状态
+	    backpack.restoreFromBundle( bundle );
 
-		artifact = (Artifact) bundle.get(ARTIFACT);
-		if (artifact() != null)     artifact().activate(owner);
+	    // 从Bundle中恢复武器，并尝试激活
+	    weapon = (KindOfWeapon) bundle.get(WEAPON);
+	    if (weapon() != null)       weapon().activate(owner);
 
-		misc = (KindofMisc) bundle.get(MISC);
-		if (misc() != null)         misc().activate( owner );
+	    // 从Bundle中恢复护甲，并尝试激活
+	    armor = (Armor)bundle.get( ARMOR );
+	    if (armor() != null)        armor().activate( owner );
 
-		ring = (Ring) bundle.get(RING);
-		if (ring() != null)         ring().activate( owner );
+	    // 从Bundle中恢复饰品，并尝试激活
+	    artifact = (Artifact) bundle.get(ARTIFACT);
+	    if (artifact() != null)     artifact().activate(owner);
 
-		secondWep = (KindOfWeapon) bundle.get(SECOND_WEP);
-		if (secondWep() != null)    secondWep().activate(owner);
+	    // 从Bundle中恢复杂项装备，并尝试激活
+	    misc = (KindofMisc) bundle.get(MISC);
+	    if (misc() != null)         misc().activate( owner );
+
+	    // 从Bundle中恢复戒指，并尝试激活
+	    ring = (Ring) bundle.get(RING);
+	    if (ring() != null)         ring().activate( owner );
+
+	    // 从Bundle中恢复第二武器，并尝试激活
+	    secondWep = (KindOfWeapon) bundle.get(SECOND_WEP);
+	    if (secondWep() != null)    secondWep().activate(owner);
 	}
 	
+	/**
+	 * 预览游戏中的护甲信息。
+	 * 此方法用于根据传入的Bundle对象更新GamesInProgress.Info实例中的护甲等级信息。
+	 * 如果Bundle中包含护甲信息，则根据护甲类型设置护甲等级；否则，设置护甲等级为0。
+	 *
+	 * @param info 游戏进行中的信息，此方法将更新其中的护甲等级。
+	 * @param bundle 一个Bundle对象，可能包含护甲信息。
+	 */
 	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
+		// 检查Bundle中是否包含护甲信息
 		if (bundle.contains( ARMOR )){
 			Armor armor = ((Armor)bundle.get( ARMOR ));
+
+			// 如果护甲是ClassArmor类型，则设置护甲等级为6；否则，使用护甲自身的等级
 			if (armor instanceof ClassArmor){
 				info.armorTier = 6;
 			} else {
 				info.armorTier = armor.tier;
 			}
 		} else {
+			// 如果Bundle中不包含护甲信息，将护甲等级设置为0
 			info.armorTier = 0;
 		}
 	}
 
 	//ignores lost inventory debuff
+	/**
+	 * 获取包含所有包的列表。
+	 * 此方法检索当前容器中的所有包，包括直接包含的背包以及任何嵌套的包。
+	 * 它返回一个ArrayList，其中包含了所有找到的包。
+	 *
+	 * @return ArrayList<Bag> - 包含所有包的列表。
+	 */
 	public ArrayList<Bag> getBags(){
-		ArrayList<Bag> result = new ArrayList<>();
+	    // 初始化一个空的ArrayList，用于存储所有包。
+	    ArrayList<Bag> result = new ArrayList<>();
 
-		result.add(backpack);
+	    // 将直接包含的背包添加到结果列表中。
+	    result.add(backpack);
 
-		for (Item i : this){
-			if (i instanceof Bag){
-				result.add((Bag)i);
-			}
-		}
+	    // 遍历当前容器中的所有物品。
+	    for (Item i : this){
+	        // 如果当前物品是包，则将其添加到结果列表中。
+	        if (i instanceof Bag){
+	            result.add((Bag)i);
+	        }
+	    }
 
-		return result;
+	    // 返回包含所有包的列表。
+	    return result;
 	}
 	
 	@SuppressWarnings("unchecked")
+	/**
+	 * 根据指定的类类型，从当前容器中获取一个项目对象。
+	 * 此方法允许泛型类型T继承自Item类，提高了代码的通用性和灵活性。
+	 *
+	 * @param itemClass 用于指定所需项目类型的Class对象。这个参数用来在容器中搜索匹配的项目。
+	 * @return 如果找到匹配的项目且该项目在丢失库存后仍被保留，则返回该项目对象；否则返回null。
+	 * @throws 无
+	 */
 	public<T extends Item> T getItem( Class<T> itemClass ) {
+	    /* 检查是否发生了丢失库存的情况 */
+	    boolean lostInvent = lostInventory();
 
-		boolean lostInvent = lostInventory();
+	    /* 遍历容器中的每个项目 */
+	    for (Item item : this) {
+	        /* 检查当前项目是否是指定类类型的实例 */
+	        if (itemClass.isInstance( item )) {
+	            /* 如果当前项目在丢失库存后仍被保留，或者当前没有发生丢失库存的情况 */
+	            if (!lostInvent || item.keptThroughLostInventory()) {
+	                /* 将当前项目强制转换为泛型类型T，并返回 */
+	                return (T) item;
+	            }
+	        }
+	    }
 
-		for (Item item : this) {
-			if (itemClass.isInstance( item )) {
-				if (!lostInvent || item.keptThroughLostInventory()) {
-					return (T) item;
-				}
-			}
-		}
-		
-		return null;
+	    /* 如果没有找到匹配的项目或者所有匹配的项目都在丢失库存后丢失，则返回null */
+	    return null;
 	}
 
+	/**
+	 * 根据指定的类类型，获取所有符合条件的物品实例列表。
+	 * 此方法允许泛型类型T继承自Item类，提高了代码的通用性和灵活性。
+	 *
+	 * @param itemClass 物品类的Class对象，用于后续的类型判断和实例化。
+	 * @return 一个ArrayList，包含所有符合条件的物品实例。列表中的每个元素都类型为T或其子类。
+	 *
+	 * 方法首先检查是否失去了库存（lostInventory），如果失去了库存，则只会添加那些在失去库存后仍被保留的物品。
+	 * 这个方法利用了Java的泛型和反射机制，来实现类型安全的物品检索。
+	 */
 	public<T extends Item> ArrayList<T> getAllItems( Class<T> itemClass ) {
-		ArrayList<T> result = new ArrayList<>();
+	    // 初始化结果列表，用于存储所有符合条件的物品实例。
+	    ArrayList<T> result = new ArrayList<>();
 
-		boolean lostInvent = lostInventory();
+	    // 检查是否失去了库存。
+	    boolean lostInvent = lostInventory();
 
-		for (Item item : this) {
-			if (itemClass.isInstance( item )) {
-				if (!lostInvent || item.keptThroughLostInventory()) {
-					result.add((T) item);
-				}
-			}
-		}
+	    // 遍历当前集合中的每个物品。
+	    for (Item item : this) {
+	        // 判断当前物品是否是指定类类型或其子类的实例。
+	        if (itemClass.isInstance( item )) {
+	            // 如果没有失去库存，或者当前物品在失去库存后仍被保留，则添加到结果列表中。
+	            if (!lostInvent || item.keptThroughLostInventory()) {
+	                result.add((T) item);
+	            }
+	        }
+	    }
 
-		return result;
+	    // 返回符合条件的物品列表。
+	    return result;
 	}
 	
 	public boolean contains( Item contains ){

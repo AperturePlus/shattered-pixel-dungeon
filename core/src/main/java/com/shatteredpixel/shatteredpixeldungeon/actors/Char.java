@@ -140,84 +140,143 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+/**
+ * 抽象类Char表示一个角色，继承自Actor类。
+ * 角色具有位置、生命值、法力值、速度、状态和视野等属性。
+ * 它还可以拥有Buff效果和对齐方式。
+ */
 public abstract class Char extends Actor {
-	
+
+	// 角色在地图上的位置。
 	public int pos = 0;
-	
+
+	// 角色的图像表示。
 	public CharSprite sprite;
-	
+
+	// 角色的身高，用于碰撞检测。
 	public int HT;
+	// 角色的生命值。
 	public int HP;
-	
+
+	// 角色的基础速度。
 	protected float baseSpeed	= 1;
+	// 角色当前移动的路径。
 	protected PathFinder.Path path;
 
+	// 角色被麻痹的状态，值大于0时表示麻痹中。
 	public int paralysed	    = 0;
+	// 角色是否被定身，true表示定身。
 	public boolean rooted		= false;
+	// 角色是否具有飞行能力，true表示可以飞行。
 	public boolean flying		= false;
+	// 角色的隐身状态，值大于0时表示隐身。
 	public int invisible		= 0;
 
-	//these are relative to the hero
+	/**
+	 * 角色的对齐方式，决定角色是敌对、中立还是友军。
+	 */
 	public enum Alignment{
 		ENEMY,
 		NEUTRAL,
 		ALLY
 	}
+	// 角色的对齐方式。
 	public Alignment alignment;
-	
+
+	// 角色的视野距离。
 	public int viewDistance	= 8;
-	
+
+	// 角色当前的视野状态，用于表示角色能看到的区域。
 	public boolean[] fieldOfView = null;
-	
+
+	// 角色拥有的Buff集合，使用LinkedHashSet保持添加顺序。
 	private LinkedHashSet<Buff> buffs = new LinkedHashSet<>();
-	
+
+
+	/**
+	 * 执行角色在游戏中的行动。
+	 * 当角色在游戏中轮到行动时，此方法被调用以更新视野并处理物品投掷。
+	 * @return 总是返回false，表示无需进一步行动。
+	 */
 	@Override
 	protected boolean act() {
+		// 根据当前可视区域更新视野，如未初始化则进行初始化
 		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){
 			fieldOfView = new boolean[Dungeon.level.length()];
 		}
+		// 更新角色的视野，这个方法会调用Dungeon.level的updateFieldOfView来设置角色的视野范围
 		Dungeon.level.updateFieldOfView( this, fieldOfView );
 
-		//throw any items that are on top of an immovable char
+		// 如果该角色具有不可移动属性，尝试投掷其上的物品
+		// 将位于不可移动角色上方的物品投掷出去
 		if (properties().contains(Property.IMMOVABLE)){
 			throwItems();
 		}
+		// 返回false表示本次行动结束，角色不移动
 		return false;
 	}
 
-	protected void throwItems(){
-		Heap heap = Dungeon.level.heaps.get( pos );
-		if (heap != null && heap.type == Heap.Type.HEAP
-				&& !(heap.peek() instanceof Tengu.BombAbility.BombItem)
-				&& !(heap.peek() instanceof Tengu.ShockerAbility.ShockerItem)) {
-			ArrayList<Integer> candidates = new ArrayList<>();
-			for (int n : PathFinder.NEIGHBOURS8){
-				if (Dungeon.level.passable[pos+n]){
-					candidates.add(pos+n);
-				}
-			}
-			if (!candidates.isEmpty()){
-				Dungeon.level.drop( heap.pickUp(), Random.element(candidates) ).sprite.drop( pos );
-			}
-		}
+
+	/**
+	 * 抛出物品的逻辑方法。
+	 * 该方法用于在特定条件下将堆中的物品抛向玩家周围的可通行位置。
+	 * 条件包括：堆存在、堆类型为普通堆、堆顶物品不是特定类型的炸弹或冲击物品。
+	 * 如果满足条件，会选择一个可通行的位置随机丢弃堆中的物品。
+	 */
+	protected void throwItems() {
+	    // 获取当前位置的堆对象
+	    Heap heap = Dungeon.level.heaps.get(pos);
+	    // 检查堆是否存在，且类型为普通堆，且堆顶物品不是特定类型的炸弹或冲击物品
+	    if (heap != null && heap.type == Heap.Type.HEAP
+	            && !(heap.peek() instanceof Tengu.BombAbility.BombItem)
+	            && !(heap.peek() instanceof Tengu.ShockerAbility.ShockerItem)) {
+	        // 创建一个整数列表，用于存储周围可通行位置的索引
+	        ArrayList<Integer> candidates = new ArrayList<>();
+	        // 遍历玩家周围的8个可能位置
+	        for (int n : PathFinder.NEIGHBOURS8) {
+	            // 如果当前位置加n的位置是可通行的，则将其索引添加到候选列表中
+	            if (Dungeon.level.passable[pos + n]) {
+	                candidates.add(pos + n);
+	            }
+	        }
+	        // 如果候选列表不为空，说明存在可通行位置
+	        if (!candidates.isEmpty()) {
+	            // 从堆中捡起物品，并在候选位置中随机选择一个位置丢弃该物品
+	            // 同时触发物品掉落的视觉效果
+	            Dungeon.level.drop(heap.pickUp(), Random.element(candidates)).sprite.drop(pos);
+	        }
+	    }
 	}
 
 	public String name(){
 		return Messages.get(this, "name");
 	}
 
-	public boolean canInteract(Char c){
-		if (Dungeon.level.adjacent( pos, c.pos )){
-			return true;
-		} else if (c instanceof Hero
-				&& alignment == Alignment.ALLY
-				&& !hasProp(this, Property.IMMOVABLE)
-				&& Dungeon.level.distance(pos, c.pos) <= 2*Dungeon.hero.pointsInTalent(Talent.ALLY_WARP)){
-			return true;
-		} else {
-			return false;
-		}
-	}
+	/**
+	 * 判断当前角色是否能够与另一个角色互动。
+	 * 互动的条件包括：角色间的位置相邻，或者特定情况下英雄与盟友间的距离在可传送范围内。
+	 *
+	 * @param c 待检查的角色，与当前角色进行互动性判断。
+	 * @return 如果满足互动条件，则返回true；否则返回false。
+	 */
+ public boolean canInteract(Char c){
+     // 如果两个角色的位置相邻，则可以互动
+     if (Dungeon.level.adjacent( pos, c.pos )){
+         return true;
+     }
+     // 如果另一个角色是英雄，并且当前角色与英雄是盟友关系，
+     // 当前角色没有不可移动的属性，且英雄的位置距离不超过2倍的盟友传送距离，则可以互动
+     else if (c instanceof Hero
+             && alignment == Alignment.ALLY
+             && !hasProp(this, Property.IMMOVABLE)
+             && Dungeon.level.distance(pos, c.pos) <= 2*Dungeon.hero.pointsInTalent(Talent.ALLY_WARP)){
+         return true;
+     }
+     // 其他情况则不能互动
+     else {
+         return false;
+     }
+ }
 	
 	//swaps places by default
 	public boolean interact(Char c){
