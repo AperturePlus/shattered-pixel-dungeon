@@ -37,18 +37,30 @@ public class SPDSettings extends GameSettings {
 	
 	//Version info
 	
+		// 配置键值
 	public static final String KEY_VERSION      = "version";
-	
+
+	/**
+	 * 设置游戏版本号。
+	 *
+	 * @param value 游戏版本数值。
+	 */
 	public static void version( int value)  {
 		put( KEY_VERSION, value );
 	}
-	
+
+	/**
+	 * 获取游戏版本号。
+	 *
+	 * @return 游戏版本数值。
+	 */
 	public static int version() {
 		return getInt( KEY_VERSION, 0 );
 	}
-	
-	//Display
-	
+
+	// 显示相关配置键值
+	// 显示设置
+
 	public static final String KEY_FULLSCREEN	= "fullscreen";
 	public static final String KEY_LANDSCAPE	= "landscape";
 	public static final String KEY_POWER_SAVER 	= "power_saver";
@@ -57,113 +69,215 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_GRID 	    = "visual_grid";
 	public static final String KEY_CAMERA_FOLLOW= "camera_follow";
 	public static final String KEY_SCREEN_SHAKE = "screen_shake";
-	
+
+	/**
+	 * 设置全屏模式。
+	 * 同时根据设置更新系统UI。
+	 *
+	 * @param value 是否开启全屏模式。
+	 */
 	public static void fullscreen( boolean value ) {
 		put( KEY_FULLSCREEN, value );
-		
 		ShatteredPixelDungeon.updateSystemUI();
 	}
-	
+
+	/**
+	 * 检查当前是否为全屏模式。
+	 *
+	 * @return 是否处于全屏模式，桌面设备默认为全屏。
+	 */
 	public static boolean fullscreen() {
 		return getBoolean( KEY_FULLSCREEN, DeviceCompat.isDesktop() );
 	}
-	
+
+	/**
+	 * 设置横屏模式。
+	 * 更新显示尺寸以适配设置。
+	 *
+	 * @param value 是否开启横屏模式。
+	 */
 	public static void landscape( boolean value ){
 		put( KEY_LANDSCAPE, value );
 		((ShatteredPixelDungeon)ShatteredPixelDungeon.instance).updateDisplaySize();
 	}
+
 	
 	//can return null because we need to directly handle the case of landscape not being set
 	// as there are different defaults for different devices
+	/**
+	 * 检查当前配置是否以横屏方式显示。
+	 * 如果配置中包含横屏设置，则返回该设置值；否则，返回null。
+	 */
 	public static Boolean landscape(){
-		if (contains(KEY_LANDSCAPE)){
-			return getBoolean(KEY_LANDSCAPE, false);
-		} else {
-			return null;
-		}
+	    if (contains(KEY_LANDSCAPE)){
+	        return getBoolean(KEY_LANDSCAPE, false);
+	    } else {
+	        return null;
+	    }
 	}
-	
+
+	/**
+	 * 设置省电模式状态。
+	 * @param value 省电模式的新状态，true为开启，false为关闭。
+	 */
 	public static void powerSaver( boolean value ){
-		put( KEY_POWER_SAVER, value );
-		((ShatteredPixelDungeon)ShatteredPixelDungeon.instance).updateDisplaySize();
+	    put( KEY_POWER_SAVER, value );
+	    ((ShatteredPixelDungeon)ShatteredPixelDungeon.instance).updateDisplaySize();
 	}
-	
+
+	/**
+	 * 获取当前省电模式的状态。
+	 * @return 省电模式的状态，如果未设置则默认为false。
+	 */
 	public static boolean powerSaver(){
-		return getBoolean( KEY_POWER_SAVER, false );
+	    return getBoolean( KEY_POWER_SAVER, false );
 	}
-	
+
+	/**
+	 * 设置画面缩放级别。
+	 * @param value 新的缩放级别。
+	 */
 	public static void zoom( int value ) {
-		put( KEY_ZOOM, value );
+	    put( KEY_ZOOM, value );
 	}
-	
+
+	/**
+	 * 获取当前的缩放级别。
+	 * @return 当前的缩放级别，如果没有设置，则默认为0。
+	 */
 	public static int zoom() {
-		return getInt( KEY_ZOOM, 0 );
+	    return getInt( KEY_ZOOM, 0 );
 	}
-	
+
+	/**
+	 * 设置屏幕亮度。
+	 * @param value 新的亮度级别。
+	 */
 	public static void brightness( int value ) {
-		put( KEY_BRIGHTNESS, value );
-		GameScene.updateFog();
+	    put( KEY_BRIGHTNESS, value );
+	    GameScene.updateFog();
 	}
-	
+
+	/**
+	 * 获取当前的屏幕亮度。
+	 * @return 当前的亮度级别，如果没有设置，则默认为0，并在一定范围内[-1, 1]。
+	 */
 	public static int brightness() {
-		return getInt( KEY_BRIGHTNESS, 0, -1, 1 );
+	    return getInt( KEY_BRIGHTNESS, 0, -1, 1 );
 	}
-	
+
+	/**
+	 * 设置视觉网格大小。
+	 * @param value 新的视觉网格大小设置。
+	 */
 	public static void visualGrid( int value ){
-		put( KEY_GRID, value );
-		GameScene.updateMap();
+	    put( KEY_GRID, value );
+	    GameScene.updateMap();
 	}
-	
+
+	/**
+	 * 获取当前的视觉网格大小。
+	 * @return 当前的视觉网格大小设置，如果没有设置，则默认为0，并在一定范围内[-1, 2]。
+	 */
 	public static int visualGrid() {
-		return getInt( KEY_GRID, 0, -1, 2 );
+	    return getInt( KEY_GRID, 0, -1, 2 );
 	}
 
+	/**
+	 * 设置相机跟随模式。
+	 * @param value 新的相机跟随模式设置。
+	 */
 	public static void cameraFollow( int value ){
-		put( KEY_CAMERA_FOLLOW, value );
+	    put( KEY_CAMERA_FOLLOW, value );
 	}
 
+	/**
+	 * 获取当前的相机跟随模式。
+	 * @return 当前的相机跟随模式设置，如果没有设置，则默认为4，并在一定范围内[1, 4]。
+	 */
 	public static int cameraFollow() {
-		return getInt( KEY_CAMERA_FOLLOW, 4, 1, 4 );
+	    return getInt( KEY_CAMERA_FOLLOW, 4, 1, 4 );
 	}
 
+	/**
+	 * 设置屏幕震动强度。
+	 * @param value 新的屏幕震动强度设置。
+	 */
 	public static void screenShake( int value ){
-		put( KEY_SCREEN_SHAKE, value );
+	    put( KEY_SCREEN_SHAKE, value );
 	}
 
+	/**
+	 * 获取当前的屏幕震动强度。
+	 * @return 当前的屏幕震动强度设置，如果没有设置，则默认为2，并在一定范围内[0, 4]。
+	 */
 	public static int screenShake() {
-		return getInt( KEY_SCREEN_SHAKE, 2, 0, 4 );
+	    return getInt( KEY_SCREEN_SHAKE, 2, 0, 4 );
 	}
-	
-	//Interface
 
+	// Interface related constants
+
+	/**
+	 * 用户界面大小设置的键。
+	 */
 	public static final String KEY_UI_SIZE 	    = "full_ui";
+	/**
+	 * 屏幕缩放设置的键。
+	 */
 	public static final String KEY_SCALE		= "scale";
+	/**
+	 * 快速交换槽设置的键。
+	 */
 	public static final String KEY_QUICK_SWAP	= "quickslot_swapper";
+	/**
+	 * 是否翻转工具栏设置的键。
+	 */
 	public static final String KEY_FLIPTOOLBAR	= "flipped_ui";
+	/**
+	 * 是否翻转标签设置的键。
+	 */
 	public static final String KEY_FLIPTAGS 	= "flip_tags";
+	/**
+	 * 工具栏模式设置的键。
+	 */
 	public static final String KEY_BARMODE		= "toolbar_mode";
+	/**
+	 * 快速槽位水皮肤设置的键。
+	 */
 	public static final String KEY_SLOTWATERSKIN= "quickslot_waterskin";
+	/**
+	 * 系统字体设置的键。
+	 */
 	public static final String KEY_SYSTEMFONT	= "system_font";
+	/**
+	 * 是否启用振动设置的键。
+	 */
 	public static final String KEY_VIBRATION    = "vibration";
 
-	//0 = mobile, 1 = mixed (large without inventory in main UI), 2 = large
+	/**
+	 * 设置用户界面大小。
+	 * @param value 用户界面大小的新设置，影响界面的布局和尺寸。
+	 */
 	public static void interfaceSize( int value ){
-		put( KEY_UI_SIZE, value );
+	    put( KEY_UI_SIZE, value );
 	}
 
+	/**
+	 * 获取当前的用户界面大小设置。
+	 * @return 当前的用户界面大小设置，该设置可能基于设备类型和屏幕尺寸动态调整。
+	 */
 	public static int interfaceSize(){
-		int size = getInt( KEY_UI_SIZE, DeviceCompat.isDesktop() ? 2 : 0 );
-		if (size > 0){
-			//force mobile UI if there is not enough space for full UI
-			float wMin = Game.width / PixelScene.MIN_WIDTH_FULL;
-			float hMin = Game.height / PixelScene.MIN_HEIGHT_FULL;
-			if (Math.min(wMin, hMin) < 2*Game.density){
-				size = 0;
-			}
-		}
-		return size;
+	    int size = getInt( KEY_UI_SIZE, DeviceCompat.isDesktop() ? 2 : 0 );
+	    if (size > 0){
+	        // 根据屏幕尺寸判断是否足够显示完整UI，如果空间不足，则强制使用移动设备UI布局
+	        float wMin = Game.width / PixelScene.MIN_WIDTH_FULL;
+	        float hMin = Game.height / PixelScene.MIN_HEIGHT_FULL;
+	        if (Math.min(wMin, hMin) < 2*Game.density){
+	            size = 0;
+	        }
+	    }
+	    return size;
 	}
-
 	public static void scale( int value ) {
 		put( KEY_SCALE, value );
 	}
@@ -209,8 +323,10 @@ public class SPDSettings extends GameSettings {
 	}
 
 	public static boolean systemFont(){
-		return getBoolean(KEY_SYSTEMFONT,
-				(language() == Languages.KOREAN || language() == Languages.CHINESE || language() == Languages.JAPANESE));
+		//return getBoolean(KEY_SYSTEMFONT,
+				//(language() == Languages.KOREAN || language() == Languages.CHINESE || language() == Languages.JAPANESE));
+		return getBoolean(KEY_SYSTEMFONT, language() == Languages.CHINESE);
+
 	}
 
 	public static void vibration(boolean value){
@@ -223,82 +339,185 @@ public class SPDSettings extends GameSettings {
 
 	//Game State
 	
-	public static final String KEY_LAST_CLASS	= "last_class";
-	public static final String KEY_CHALLENGES	= "challenges";
-	public static final String KEY_CUSTOM_SEED	= "custom_seed";
-	public static final String KEY_LAST_DAILY	= "last_daily";
-	public static final String KEY_INTRO		= "intro";
+	/**
+	 * 该类提供了一些静态方法来处理应用程序的首选项。
+	 * 它主要用于存储和检索用户的设置和进度数据。
+	 */
 
-	public static final String KEY_SUPPORT_NAGGED= "support_nagged";
-	
-	public static void intro( boolean value ) {
-		put( KEY_INTRO, value );
-	}
-	
-	public static boolean intro() {
-		return getBoolean( KEY_INTRO, true );
-	}
-	
-	public static void lastClass( int value ) {
-		put( KEY_LAST_CLASS, value );
-	}
-	
-	public static int lastClass() {
-		return getInt( KEY_LAST_CLASS, 0, 0, 3 );
-	}
-	
-	public static void challenges( int value ) {
-		put( KEY_CHALLENGES, value );
-	}
-	
-	public static int challenges() {
-		return getInt( KEY_CHALLENGES, 0, 0, Challenges.MAX_VALUE );
-	}
+	    // 存储最后一个玩的课程的键
+	    public static final String KEY_LAST_CLASS = "last_class";
+	    // 存储挑战完成数量的键
+	    public static final String KEY_CHALLENGES = "challenges";
+	    // 存储用户自定义随机数种子的键
+	    public static final String KEY_CUSTOM_SEED = "custom_seed";
+	    // 存储上一次完成的每日挑战时间的键
+	    public static final String KEY_LAST_DAILY = "last_daily";
+	    // 存储是否展示过介绍的键
+	    public static final String KEY_INTRO = "intro";
+	    // 存储是否已经提醒过支持的键
+	    public static final String KEY_SUPPORT_NAGGED = "support_nagged";
 
-	public static void customSeed( String value ){
-		put( KEY_CUSTOM_SEED, value );
-	}
+	    /**
+	     * 保存是否已经展示过介绍的设置。
+	     *
+	     * @param value true表示已经展示过介绍，false表示还没有。
+	     */
+	    public static void intro(boolean value) {
+	        put(KEY_INTRO, value);
+	    }
 
-	public static String customSeed() {
-		return getString( KEY_CUSTOM_SEED, "", 20);
-	}
+	    /**
+	     * 获取是否已经展示过介绍的设置。
+	     *
+	     * @return 如果已经展示过介绍则返回true，否则返回false。如果值不存在，默认为true。
+	     */
+	    public static boolean intro() {
+	        return getBoolean(KEY_INTRO, true);
+	    }
 
-	public static void lastDaily( long value ){
-		put( KEY_LAST_DAILY, value );
-	}
+	    /**
+	     * 保存最后一个玩的课程的设置。
+	     *
+	     * @param value 最后一个玩的课程的编号。
+	     */
+	    public static void lastClass(int value) {
+	        put(KEY_LAST_CLASS, value);
+	    }
 
-	public static long lastDaily() {
-		return getLong( KEY_LAST_DAILY, 0);
-	}
+	    /**
+	     * 获取最后一个玩的课程的设置。
+	     *
+	     * @return 最后一个玩的课程的编号。如果值不存在，默认为0。
+	     */
+	    public static int lastClass() {
+	        return getInt(KEY_LAST_CLASS, 0, 0, 3);
+	    }
 
-	public static void supportNagged( boolean value ) {
-		put( KEY_SUPPORT_NAGGED, value );
-	}
+	    /**
+	     * 保存已完成挑战的数量的设置。
+	     *
+	     * @param value 完成的挑战数量。
+	     */
+	    public static void challenges(int value) {
+	        put(KEY_CHALLENGES, value);
+	    }
 
-	public static boolean supportNagged() {
-		return getBoolean(KEY_SUPPORT_NAGGED, false);
-	}
+	    /**
+	     * 获取已完成挑战的数量的设置。
+	     *
+	     * @return 完成的挑战数量。如果值不存在，默认为0。
+	     */
+	    public static int challenges() {
+	        return getInt(KEY_CHALLENGES, 0, 0, Challenges.MAX_VALUE);
+	    }
+
+	    /**
+	     * 保存用户自定义随机数种子的设置。
+	     *
+	     * @param value 用户自定义的随机数种子。
+	     */
+	    public static void customSeed(String value) {
+	        put(KEY_CUSTOM_SEED, value);
+	    }
+
+	    /**
+	     * 获取用户自定义随机数种子的设置。
+	     *
+	     * @return 用户自定义的随机数种子。如果值不存在，默认为空字符串。
+	     */
+	    public static String customSeed() {
+	        return getString(KEY_CUSTOM_SEED, "", 20);
+	    }
+
+	    /**
+	     * 保存上一次完成的每日挑战时间的设置。
+	     *
+	     * @param value 上一次完成的每日挑战的时间戳。
+	     */
+	    public static void lastDaily(long value) {
+	        put(KEY_LAST_DAILY, value);
+	    }
+
+	    /**
+	     * 获取上一次完成的每日挑战时间的设置。
+	     *
+	     * @return 上一次完成的每日挑战的时间戳。如果值不存在，默认为0。
+	     */
+	    public static long lastDaily() {
+	        return getLong(KEY_LAST_DAILY, 0);
+	    }
+
+	    /**
+	     * 保存是否已经提醒过支持的设置。
+	     *
+	     * @param value true表示已经提醒过支持，false表示还没有。
+	     */
+	    public static void supportNagged(boolean value) {
+	        put(KEY_SUPPORT_NAGGED, value);
+	    }
+
+	    /**
+	     * 获取是否已经提醒过支持的设置。
+	     *
+	     * @return 如果已经提醒过支持则返回true，否则返回false。如果值不存在，默认为false。
+	     */
+	    public static boolean supportNagged() {
+	        return getBoolean(KEY_SUPPORT_NAGGED, false);
+	    }
+
 
 	//Input
 
+	/**
+	 * 控制器灵敏度设置的键名常量。
+	 * 用于存储和检索控制器灵敏度的配置值。
+	 */
 	public static final String KEY_CONTROLLER_SENS  = "controller_sens";
+
+	/**
+	 * 移动保持灵敏度设置的键名常量。
+	 * 用于存储和检索移动保持灵敏度的配置值。
+	 */
 	public static final String KEY_MOVE_SENS        = "move_sens";
 
+	/**
+	 * 设置控制器指针灵敏度。
+	 *
+	 * @param value 灵敏度值，用于调整控制器的敏感程度。
+	 */
 	public static void controllerPointerSensitivity( int value ){
 		put( KEY_CONTROLLER_SENS, value );
 	}
 
+	/**
+	 * 获取控制器指针灵敏度。
+	 *
+	 * @return 当前设置的控制器指针灵敏度值。
+	 *         如果没有设置，默认值为5，范围为1到10。
+	 */
 	public static int controllerPointerSensitivity(){
 		return getInt(KEY_CONTROLLER_SENS, 5, 1, 10);
 	}
 
+	/**
+	 * 设置移动保持灵敏度。
+	 *
+	 * @param value 灵敏度值，用于调整移动保持的敏感程度。
+	 */
 	public static void movementHoldSensitivity( int value ){
 		put( KEY_MOVE_SENS, value );
 	}
 
+	/**
+	 * 获取移动保持灵敏度。
+	 *
+	 * @return 当前设置的移动保持灵敏度值。
+	 *         如果没有设置，默认值为3，范围为0到4。
+	 */
 	public static int movementHoldSensitivity(){
 		return getInt(KEY_MOVE_SENS, 3, 0, 4);
 	}
+
 
 	//Connectivity
 
@@ -358,45 +577,81 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_IGNORE_SILENT= "ignore_silent";
 	public static final String KEY_MUSIC_BG     = "music_bg";
 	
+	/**
+	 * 控制音乐是否启用。
+	 * @param value true表示启用音乐，false表示禁用音乐。
+	 */
 	public static void music( boolean value ) {
-		Music.INSTANCE.enable( value );
-		put( KEY_MUSIC, value );
-	}
-	
-	public static boolean music() {
-		return getBoolean( KEY_MUSIC, true );
-	}
-	
-	public static void musicVol( int value ){
-		Music.INSTANCE.volume(value*value/100f);
-		put( KEY_MUSIC_VOL, value );
-	}
-	
-	public static int musicVol(){
-		return getInt( KEY_MUSIC_VOL, 10, 0, 10 );
-	}
-	
-	public static void soundFx( boolean value ) {
-		Sample.INSTANCE.enable( value );
-		put( KEY_SOUND_FX, value );
-	}
-	
-	public static boolean soundFx() {
-		return getBoolean( KEY_SOUND_FX, true );
-	}
-	
-	public static void SFXVol( int value ) {
-		Sample.INSTANCE.volume(value*value/100f);
-		put( KEY_SFX_VOL, value );
-	}
-	
-	public static int SFXVol() {
-		return getInt( KEY_SFX_VOL, 10, 0, 10 );
+	    Music.INSTANCE.enable( value );
+	    put( KEY_MUSIC, value );
 	}
 
+	/**
+	 * 获取当前音乐启用状态。
+	 * @return 音乐是否启用的布尔值。
+	 */
+	public static boolean music() {
+	    return getBoolean( KEY_MUSIC, true );
+	}
+
+	/**
+	 * 设置音乐音量。
+	 * @param value 音乐音量的百分比（0-100）。
+	 */
+	public static void musicVol( int value ){
+	    Music.INSTANCE.volume(value*value/100f);
+	    put( KEY_MUSIC_VOL, value );
+	}
+
+	/**
+	 * 获取当前音乐音量。
+	 * @return 当前音乐音量的百分比（0-100）。
+	 */
+	public static int musicVol(){
+	    return getInt( KEY_MUSIC_VOL, 10, 0, 10 );
+	}
+
+	/**
+	 * 控制音效是否启用。
+	 * @param value true表示启用音效，false表示禁用音效。
+	 */
+	public static void soundFx( boolean value ) {
+	    Sample.INSTANCE.enable( value );
+	    put( KEY_SOUND_FX, value );
+	}
+
+	/**
+	 * 获取当前音效启用状态。
+	 * @return 音效是否启用的布尔值。
+	 */
+	public static boolean soundFx() {
+	    return getBoolean( KEY_SOUND_FX, true );
+	}
+
+	/**
+	 * 设置音效音量。
+	 * @param value 音效音量的百分比（0-100）。
+	 */
+	public static void SFXVol( int value ) {
+	    Sample.INSTANCE.volume(value*value/100f);
+	    put( KEY_SFX_VOL, value );
+	}
+
+	/**
+	 * 获取当前音效音量。
+	 * @return 当前音效音量的百分比（0-100）。
+	 */
+	public static int SFXVol() {
+	    return getInt( KEY_SFX_VOL, 10, 0, 10 );
+	}
+
+	/**
+	 * 设置是否忽略静音模式。
+	 * @param value true表示忽略设备的静音模式，false表示尊重设备的静音模式。
+	 */
 	public static void ignoreSilentMode( boolean value ){
-		put( KEY_IGNORE_SILENT, value);
-		Game.platform.setHonorSilentSwitch(!value);
+	    put( KEY_IGNORE_SILENT, value);
+	    Game.platform.setHonorSilentSwitch(!value);
 	}
 
 	public static boolean ignoreSilentMode(){

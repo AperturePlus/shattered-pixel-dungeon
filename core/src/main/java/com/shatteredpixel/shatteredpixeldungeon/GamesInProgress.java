@@ -321,12 +321,23 @@ public class GamesInProgress {
 	    public int maxDepth;
 	}
 	
-	public static final Comparator<GamesInProgress.Info> scoreComparator = new Comparator<GamesInProgress.Info>() {
-		@Override
-		public int compare(GamesInProgress.Info lhs, GamesInProgress.Info rhs ) {
-			int lScore = (lhs.level * lhs.maxDepth * 100) + lhs.goldCollected;
-			int rScore = (rhs.level * rhs.maxDepth * 100) + rhs.goldCollected;
-			return (int)Math.signum( rScore - lScore );
-		}
-	};
+    /**
+     * 用于比较游戏进度的评分的比较器。
+     * 此比较器根据游戏的级别、最大深度和已收集的黄金数量来计算一个综合评分，
+     * 并根据这个综合评分来决定游戏进度的排序。
+     * 比较器的逻辑是，首先通过级别、最大深度和已收集黄金数量计算出一个评分值，
+     * 然后比较两个游戏的评分值，根据评分值的差值的符号来决定两个游戏进度的顺序。
+     *
+     * @param lhs 第一个游戏进度的信息对象。
+     * @param rhs 第二个游戏进度的信息对象。
+     * @return 返回一个整数，表示两个游戏进度的评分的比较结果。
+     */
+    public static final Comparator<GamesInProgress.Info> scoreComparator = (lhs, rhs) -> {
+        // 计算第一个游戏的综合评分
+        int lScore = (lhs.level * lhs.maxDepth * 100) + lhs.goldCollected;
+        // 计算第二个游戏的综合评分
+        int rScore = (rhs.level * rhs.maxDepth * 100) + rhs.goldCollected;
+        // 根据两个游戏的评分差值的符号决定比较结果
+        return (int)Math.signum( rScore - lScore );
+    };
 }

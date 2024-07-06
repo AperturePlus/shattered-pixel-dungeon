@@ -831,34 +831,42 @@ public class Hero extends Char {
 		return dmg;
 	}
 
-	@Override
+	/**
+	 * 计算角色的速度。
+	 * 速度的计算受到多种因素的影响，包括基础速度、加速道具、护甲、动量Buff以及自然力量Buff。
+	 * @return 计算后的角色速度。
+	 */
 	public float speed() {
+	    // 获取基础速度
+	    float speed = super.speed();
 
-		float speed = super.speed();
+	    // 应用加速戒指的效果
+	    speed *= RingOfHaste.speedMultiplier(this);
 
-		speed *= RingOfHaste.speedMultiplier(this);
-		
-		if (belongings.armor() != null) {
-			speed = belongings.armor().speedFactor(this, speed);
-		}
-		
-		Momentum momentum = buff(Momentum.class);
-		if (momentum != null){
-			((HeroSprite)sprite).sprint( momentum.freerunning() ? 1.5f : 1f );
-			speed *= momentum.speedMultiplier();
-		} else {
-			((HeroSprite)sprite).sprint( 1f );
-		}
+	    // 如果装备了护甲，调整速度
+	    if (belongings.armor() != null) {
+	        speed = belongings.armor().speedFactor(this, speed);
+	    }
 
-		NaturesPower.naturesPowerTracker natStrength = buff(NaturesPower.naturesPowerTracker.class);
-		if (natStrength != null){
-			speed *= (2f + 0.25f*pointsInTalent(Talent.GROWING_POWER));
-		}
+	    // 检查是否拥有动量Buff，并调整角色的冲刺状态和速度
+	    Momentum momentum = buff(Momentum.class);
+	    if (momentum != null) {
+	        ((HeroSprite)sprite).sprint(momentum.freerunning() ? 1.5f : 1f);
+	        speed *= momentum.speedMultiplier();
+	    } else {
+	        ((HeroSprite)sprite).sprint(1f);
+	    }
 
-		speed = AscensionChallenge.modifyHeroSpeed(speed);
-		
-		return speed;
-		
+	    // 如果拥有自然力量Buff，调整速度
+	    NaturesPower.naturesPowerTracker natStrength = buff(NaturesPower.naturesPowerTracker.class);
+	    if (natStrength != null) {
+	        speed *= (2f + 0.25f * pointsInTalent(Talent.GROWING_POWER));
+	    }
+
+	    // 应对试炼挑战的速度修正
+	    speed = AscensionChallenge.modifyHeroSpeed(speed);
+
+	    return speed;
 	}
 
 	@Override

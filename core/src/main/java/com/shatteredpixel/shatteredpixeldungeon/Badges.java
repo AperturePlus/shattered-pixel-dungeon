@@ -263,287 +263,382 @@ public class Badges {
 		//no renamed badges currently
 	}
 
-	public static HashSet<Badge> restore( Bundle bundle ) {
-		HashSet<Badge> badges = new HashSet<>();
-		if (bundle == null) return badges;
-		
-		String[] names = bundle.getStringArray( BADGES );
-		if (names == null) return badges;
+	/**
+	 * 从Bundle中恢复徽章集合。
+	 * 该方法通过读取Bundle中存储的徽章名称数组，然后根据当前有效的徽章名称来重建徽章集合。
+	 * 如果Bundle为空或没有存储徽章名称，则返回空的徽章集合。
+	 * 在重建徽章集合的过程中，会检查每个徽章名称是否已被重命名或移除。
+	 *
+	 * @param bundle 保存徽章名称的Bundle对象，来自于之前的保存操作。
+	 * @return 恢复后的徽章集合，如果无法恢复则返回空集合。
+	 */
+	public static HashSet<Badge> restore(Bundle bundle) {
+	    HashSet<Badge> badges = new HashSet<>();
+	    if (bundle == null) return badges;
 
-		for (int i=0; i < names.length; i++) {
-			try {
-				if (renamedBadges.containsKey(names[i])){
-					names[i] = renamedBadges.get(names[i]);
-				}
-				if (!removedBadges.contains(names[i])){
-					badges.add( Badge.valueOf( names[i] ) );
-				}
-			} catch (Exception e) {
-				ShatteredPixelDungeon.reportException(e);
-			}
-		}
+	    // 从Bundle中获取保存的徽章名称数组
+	    String[] names = bundle.getStringArray(BADGES);
+	    if (names == null) return badges;
+
+	    // 遍历每个徽章名称，检查并添加到徽章集合中
+	    for (int i = 0; i < names.length; i++) {
+	        try {
+	            // 如果徽章名称已被重命名，更新名称
+	            if (renamedBadges.containsKey(names[i])) {
+	                names[i] = renamedBadges.get(names[i]);
+	            }
+	            // 如果徽章名称未被移除，添加到徽章集合中
+	            if (!removedBadges.contains(names[i])) {
+	                badges.add(Badge.valueOf(names[i]));
+	            }
+	        } catch (Exception e) {
+	            // 捕获并报告在处理徽章名称时可能出现的异常
+	            ShatteredPixelDungeon.reportException(e);
+	        }
+	    }
+	    // 注意：循环结束后应返回重建的徽章集合，此处代码不完整
 
 		addReplacedBadges(badges);
 	
 		return badges;
 	}
 	
+	/**
+	 * 将徽章信息存储到Bundle中。
+	 * @param bundle 用于存储徽章名称的Bundle对象。
+	 * @param badges 徽章集合，其中包含所有需要存储的徽章。
+	 */
 	public static void store( Bundle bundle, HashSet<Badge> badges ) {
-		addReplacedBadges(badges);
+	    addReplacedBadges(badges);
 
-		int count = 0;
-		String names[] = new String[badges.size()];
-		
-		for (Badge badge:badges) {
-			names[count++] = badge.name();
-		}
-		bundle.put( BADGES, names );
+	    int count = 0;
+	    String names[] = new String[badges.size()];
+
+	    for (Badge badge:badges) {
+	        names[count++] = badge.name();
+	    }
+	    bundle.put( BADGES, names );
 	}
-	
+
+	/**
+	 * 从Bundle中加载本地徽章数据。
+	 * @param bundle 包含徽章数据的Bundle对象。
+	 */
 	public static void loadLocal( Bundle bundle ) {
-		local = restore( bundle );
+	    local = restore( bundle );
 	}
-	
+
+	/**
+	 * 将本地徽章数据保存到Bundle中。
+	 * @param bundle 用于存储徽章数据的Bundle对象。
+	 */
 	public static void saveLocal( Bundle bundle ) {
-		store( bundle, local );
+	    store( bundle, local );
 	}
-	
+
+	/**
+	 * 加载全局徽章数据。
+	 * 如果全局徽章数据尚未初始化，则从文件中尝试加载；加载失败则创建空的徽章集合。
+	 */
 	public static void loadGlobal() {
-		if (global == null) {
-			try {
-				Bundle bundle = FileUtils.bundleFromFile( BADGES_FILE );
-				global = restore( bundle );
+	    if (global == null) {
+	        try {
+	            Bundle bundle = FileUtils.bundleFromFile( BADGES_FILE );
+	            global = restore( bundle );
 
-			} catch (IOException e) {
-				global = new HashSet<>();
-			}
-		}
+	        } catch (IOException e) {
+	            global = new HashSet<>();
+	        }
+	    }
 	}
 
+	/**
+	 * 保存全局徽章数据到文件。
+	 * 此方法是saveGlobal(boolean)的重载，默认不强制保存。
+	 */
 	public static void saveGlobal(){
-		saveGlobal(false);
+	    saveGlobal(false);
 	}
 
+	/**
+	 * 保存全局徽章数据到文件。
+	 * 根据force参数决定是否强制保存。
+	 * 如果徽章数据需要保存或force为true，则将徽章数据写入到文件中，并重置saveNeeded标志。
+	 * @param force 强制保存的标志，为true时忽略saveNeeded的值直接保存。
+	 */
 	public static void saveGlobal(boolean force) {
-		if (saveNeeded || force) {
-			
-			Bundle bundle = new Bundle();
-			store( bundle, global );
-			
-			try {
-				FileUtils.bundleToFile(BADGES_FILE, bundle);
-				saveNeeded = false;
-			} catch (IOException e) {
-				ShatteredPixelDungeon.reportException(e);
-			}
-		}
-	}
+	    if (saveNeeded || force) {
 
+	        Bundle bundle = new Bundle();
+	        store( bundle, global );
+
+	        try {
+	            FileUtils.bundleToFile(BADGES_FILE, bundle);
+	            saveNeeded = false;
+	        } catch (IOException e) {
+	            ShatteredPixelDungeon.reportException(e);
+	        }
+	    }
+	}
+	/**
+	 * 计算已解锁的徽章总数。
+	 * 根据全局或本地徽章列表的大小返回徽章数量。
+	 *
+	 * @param global 指示是否考虑全局徽章列表的布尔值。
+	 * @return 已解锁的徽章总数。
+	 */
 	public static int totalUnlocked(boolean global){
-		if (global) return Badges.global.size();
-		else        return Badges.local.size();
+	    if (global) return Badges.global.size();
+	    else        return Badges.local.size();
 	}
 
+	/**
+	 * 验证并解锁怪物击杀徽章。
+	 * 根据玩家击杀的怪物数量，检查并解锁相应的怪物击杀徽章。
+	 * 如果满足条件且徽章尚未被解锁，则添加到本地徽章列表中。
+	 * 最后，展示新解锁的徽章（如果存在）。
+	 */
 	public static void validateMonstersSlain() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.MONSTERS_SLAIN_1 ) && Statistics.enemiesSlain >= 10) {
-			badge = Badge.MONSTERS_SLAIN_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.MONSTERS_SLAIN_2 ) && Statistics.enemiesSlain >= 50) {
-			if (badge != null) unlock(badge);
-			badge = Badge.MONSTERS_SLAIN_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.MONSTERS_SLAIN_3 ) && Statistics.enemiesSlain >= 100) {
-			if (badge != null) unlock(badge);
-			badge = Badge.MONSTERS_SLAIN_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.MONSTERS_SLAIN_4 ) && Statistics.enemiesSlain >= 250) {
-			if (badge != null) unlock(badge);
-			badge = Badge.MONSTERS_SLAIN_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.MONSTERS_SLAIN_5 ) && Statistics.enemiesSlain >= 500) {
-			if (badge != null) unlock(badge);
-			badge = Badge.MONSTERS_SLAIN_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查并尝试解锁每个级别的怪物击杀徽章
+	    if (!local.contains( Badge.MONSTERS_SLAIN_1 ) && Statistics.enemiesSlain >= 10) {
+	        badge = Badge.MONSTERS_SLAIN_1;
+	        local.add( badge );
+	    }
+	    if (!local.contains( Badge.MONSTERS_SLAIN_2 ) && Statistics.enemiesSlain >= 50) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.MONSTERS_SLAIN_2;
+	        local.add( badge );
+	    }
+	    if (!local.contains( Badge.MONSTERS_SLAIN_3 ) && Statistics.enemiesSlain >= 100) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.MONSTERS_SLAIN_3;
+	        local.add( badge );
+	    }
+	    if (!local.contains( Badge.MONSTERS_SLAIN_4 ) && Statistics.enemiesSlain >= 250) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.MONSTERS_SLAIN_4;
+	        local.add( badge );
+	    }
+	    if (!local.contains( Badge.MONSTERS_SLAIN_5 ) && Statistics.enemiesSlain >= 500) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.MONSTERS_SLAIN_5;
+	        local.add( badge );
+	    }
+
+	    // 展示可能新解锁的徽章
+	    displayBadge( badge );
 	}
-	
+	/**
+	 * 验证是否满足收集黄金的条件，并授予相应的徽章。
+	 * 如果玩家收集的黄金达到指定阈值且尚未获得相应徽章，则授予徽章。
+	 */
 	public static void validateGoldCollected() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.GOLD_COLLECTED_1 ) && Statistics.goldCollected >= 250) {
-			if (badge != null) unlock(badge);
-			badge = Badge.GOLD_COLLECTED_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.GOLD_COLLECTED_2 ) && Statistics.goldCollected >= 1000) {
-			if (badge != null) unlock(badge);
-			badge = Badge.GOLD_COLLECTED_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.GOLD_COLLECTED_3 ) && Statistics.goldCollected >= 2500) {
-			if (badge != null) unlock(badge);
-			badge = Badge.GOLD_COLLECTED_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.GOLD_COLLECTED_4 ) && Statistics.goldCollected >= 7500) {
-			if (badge != null) unlock(badge);
-			badge = Badge.GOLD_COLLECTED_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.GOLD_COLLECTED_5 ) && Statistics.goldCollected >= 15_000) {
-			if (badge != null) unlock(badge);
-			badge = Badge.GOLD_COLLECTED_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得黄金收集徽章的条件
+	    if (!local.contains(Badge.GOLD_COLLECTED_1) && Statistics.goldCollected >= 250) {
+	        badge = Badge.GOLD_COLLECTED_1;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.GOLD_COLLECTED_2) && Statistics.goldCollected >= 1000) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.GOLD_COLLECTED_2;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.GOLD_COLLECTED_3) && Statistics.goldCollected >= 2500) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.GOLD_COLLECTED_3;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.GOLD_COLLECTED_4) && Statistics.goldCollected >= 7500) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.GOLD_COLLECTED_4;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.GOLD_COLLECTED_5) && Statistics.goldCollected >= 15_000) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.GOLD_COLLECTED_5;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+
+	/**
+	 * 验证是否达到特定等级，并授予相应的徽章。
+	 * 如果玩家的角色等级达到指定阈值且尚未获得相应徽章，则授予徽章。
+	 */
 	public static void validateLevelReached() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.LEVEL_REACHED_1 ) && Dungeon.hero.lvl >= 6) {
-			badge = Badge.LEVEL_REACHED_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.LEVEL_REACHED_2 ) && Dungeon.hero.lvl >= 12) {
-			if (badge != null) unlock(badge);
-			badge = Badge.LEVEL_REACHED_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.LEVEL_REACHED_3 ) && Dungeon.hero.lvl >= 18) {
-			if (badge != null) unlock(badge);
-			badge = Badge.LEVEL_REACHED_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.LEVEL_REACHED_4 ) && Dungeon.hero.lvl >= 24) {
-			if (badge != null) unlock(badge);
-			badge = Badge.LEVEL_REACHED_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.LEVEL_REACHED_5 ) && Dungeon.hero.lvl >= 30) {
-			if (badge != null) unlock(badge);
-			badge = Badge.LEVEL_REACHED_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得等级达到徽章的条件
+	    if (!local.contains(Badge.LEVEL_REACHED_1) && Dungeon.hero.lvl >= 6) {
+	        badge = Badge.LEVEL_REACHED_1;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.LEVEL_REACHED_2) && Dungeon.hero.lvl >= 12) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.LEVEL_REACHED_2;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.LEVEL_REACHED_3) && Dungeon.hero.lvl >= 18) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.LEVEL_REACHED_3;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.LEVEL_REACHED_4) && Dungeon.hero.lvl >= 24) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.LEVEL_REACHED_4;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.LEVEL_REACHED_5) && Dungeon.hero.lvl >= 30) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.LEVEL_REACHED_5;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+
+	/**
+	 * 验证是否达到特定的力量值，并授予相应的徽章。
+	 * 如果玩家的角色力量值达到指定阈值且尚未获得相应徽章，则授予徽章。
+	 */
 	public static void validateStrengthAttained() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.STRENGTH_ATTAINED_1 ) && Dungeon.hero.STR >= 12) {
-			badge = Badge.STRENGTH_ATTAINED_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.STRENGTH_ATTAINED_2 ) && Dungeon.hero.STR >= 14) {
-			if (badge != null) unlock(badge);
-			badge = Badge.STRENGTH_ATTAINED_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.STRENGTH_ATTAINED_3 ) && Dungeon.hero.STR >= 16) {
-			if (badge != null) unlock(badge);
-			badge = Badge.STRENGTH_ATTAINED_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.STRENGTH_ATTAINED_4 ) && Dungeon.hero.STR >= 18) {
-			if (badge != null) unlock(badge);
-			badge = Badge.STRENGTH_ATTAINED_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.STRENGTH_ATTAINED_5 ) && Dungeon.hero.STR >= 20) {
-			if (badge != null) unlock(badge);
-			badge = Badge.STRENGTH_ATTAINED_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得力量徽章的条件
+	    if (!local.contains(Badge.STRENGTH_ATTAINED_1) && Dungeon.hero.STR >= 12) {
+	        badge = Badge.STRENGTH_ATTAINED_1;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.STRENGTH_ATTAINED_2) && Dungeon.hero.STR >= 14) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.STRENGTH_ATTAINED_2;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.STRENGTH_ATTAINED_3) && Dungeon.hero.STR >= 16) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.STRENGTH_ATTAINED_3;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.STRENGTH_ATTAINED_4) && Dungeon.hero.STR >= 18) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.STRENGTH_ATTAINED_4;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.STRENGTH_ATTAINED_5) && Dungeon.hero.STR >= 20) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.STRENGTH_ATTAINED_5;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+	/**
+	 * 验证玩家是否满足获得食物食用相关徽章的条件，并授予相应的徽章。
+	 * 如果玩家满足条件且尚未获得徽章，则添加到徽章列表中。
+	 */
 	public static void validateFoodEaten() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.FOOD_EATEN_1 ) && Statistics.foodEaten >= 10) {
-			badge = Badge.FOOD_EATEN_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.FOOD_EATEN_2 ) && Statistics.foodEaten >= 20) {
-			if (badge != null) unlock(badge);
-			badge = Badge.FOOD_EATEN_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.FOOD_EATEN_3 ) && Statistics.foodEaten >= 30) {
-			if (badge != null) unlock(badge);
-			badge = Badge.FOOD_EATEN_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.FOOD_EATEN_4 ) && Statistics.foodEaten >= 40) {
-			if (badge != null) unlock(badge);
-			badge = Badge.FOOD_EATEN_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.FOOD_EATEN_5 ) && Statistics.foodEaten >= 50) {
-			if (badge != null) unlock(badge);
-			badge = Badge.FOOD_EATEN_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得第一枚食物徽章的条件
+	    if (!local.contains(Badge.FOOD_EATEN_1) && Statistics.foodEaten >= 10) {
+	        badge = Badge.FOOD_EATEN_1;
+	        local.add(badge);
+	    }
+	    // 检查是否满足获得第二至第五枚食物徽章的条件
+	    // 如果之前已获得过徽章，则先解锁之前的徽章
+	    if (!local.contains(Badge.FOOD_EATEN_2) && Statistics.foodEaten >= 20) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.FOOD_EATEN_2;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.FOOD_EATEN_3) && Statistics.foodEaten >= 30) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.FOOD_EATEN_3;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.FOOD_EATEN_4) && Statistics.foodEaten >= 40) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.FOOD_EATEN_4;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.FOOD_EATEN_5) && Statistics.foodEaten >= 50) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.FOOD_EATEN_5;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+
+	/**
+	 * 验证玩家是否满足获得制作相关徽章的条件，并授予相应的徽章。
+	 * 如果玩家满足条件且尚未获得徽章，则添加到徽章列表中。
+	 */
 	public static void validateItemsCrafted() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.ITEMS_CRAFTED_1 ) && Statistics.itemsCrafted >= 3) {
-			badge = Badge.ITEMS_CRAFTED_1;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.ITEMS_CRAFTED_2 ) && Statistics.itemsCrafted >= 8) {
-			if (badge != null) unlock(badge);
-			badge = Badge.ITEMS_CRAFTED_2;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.ITEMS_CRAFTED_3 ) && Statistics.itemsCrafted >= 15) {
-			if (badge != null) unlock(badge);
-			badge = Badge.ITEMS_CRAFTED_3;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.ITEMS_CRAFTED_4 ) && Statistics.itemsCrafted >= 24) {
-			if (badge != null) unlock(badge);
-			badge = Badge.ITEMS_CRAFTED_4;
-			local.add( badge );
-		}
-		if (!local.contains( Badge.ITEMS_CRAFTED_5 ) && Statistics.itemsCrafted >= 35) {
-			if (badge != null) unlock(badge);
-			badge = Badge.ITEMS_CRAFTED_5;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得第一至第五枚制作徽章的条件
+	    // 如果之前已获得过徽章，则先解锁之前的徽章
+	    if (!local.contains(Badge.ITEMS_CRAFTED_1) && Statistics.itemsCrafted >= 3) {
+	        badge = Badge.ITEMS_CRAFTED_1;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.ITEMS_CRAFTED_2) && Statistics.itemsCrafted >= 8) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.ITEMS_CRAFTED_2;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.ITEMS_CRAFTED_3) && Statistics.itemsCrafted >= 15) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.ITEMS_CRAFTED_3;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.ITEMS_CRAFTED_4) && Statistics.itemsCrafted >= 24) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.ITEMS_CRAFTED_4;
+	        local.add(badge);
+	    }
+	    if (!local.contains(Badge.ITEMS_CRAFTED_5) && Statistics.itemsCrafted >= 35) {
+	        if (badge != null) unlock(badge);
+	        badge = Badge.ITEMS_CRAFTED_5;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+
+	/**
+	 * 验证玩家是否满足获得消灭 Piranhas 徽章的条件，并授予徽章。
+	 * 如果玩家满足条件且尚未获得徽章，则添加到徽章列表中。
+	 */
 	public static void validatePiranhasKilled() {
-		Badge badge = null;
-		
-		if (!local.contains( Badge.PIRANHAS ) && Statistics.piranhasKilled >= 6) {
-			badge = Badge.PIRANHAS;
-			local.add( badge );
-		}
-		
-		displayBadge( badge );
+	    Badge badge = null;
+
+	    // 检查是否满足获得 Piranhas 徽章的条件
+	    if (!local.contains(Badge.PIRANHAS) && Statistics.piranhasKilled >= 6) {
+	        badge = Badge.PIRANHAS;
+	        local.add(badge);
+	    }
+
+	    displayBadge(badge);
 	}
-	
+	/**
+	 * 验证获得的物品等级是否达到徽章获取条件。
+	 * 此方法应在以下情况调用：
+	 * 1. 物品被获取（Item.collect）
+	 * 2. 物品被升级（ScrollOfUpgrade, ScrollOfWeaponUpgrade, ShortSword, WandOfMagicMissile）
+	 * 3. 物品被鉴定
+	 * 注意：神器不应触发此徽章，因为它们有替代的升级方式。
+	 *
+	 * @param item 要验证的物品
+	 */
 	public static void validateItemLevelAquired( Item item ) {
-		
+
 		// This method should be called:
 		// 1) When an item is obtained (Item.collect)
 		// 2) When an item is upgraded (ScrollOfUpgrade, ScrollOfWeaponUpgrade, ShortSword, WandOfMagicMissile)
@@ -557,7 +652,7 @@ public class Badges {
 		if (item instanceof MeleeWeapon){
 			validateDuelistUnlock();
 		}
-		
+
 		Badge badge = null;
 		if (!local.contains( Badge.ITEM_LEVEL_1 ) && item.level() >= 3) {
 			badge = Badge.ITEM_LEVEL_1;
@@ -583,12 +678,16 @@ public class Badges {
 			badge = Badge.ITEM_LEVEL_5;
 			local.add( badge );
 		}
-		
+
 		displayBadge( badge );
 	}
-	
+	/**
+	 * 验证所有类型的包是否已被购买，并授予相应的徽章。
+	 *
+	 * @param bag 被购买的钱包物品
+	 */
 	public static void validateAllBagsBought( Item bag ) {
-		
+
 		Badge badge = null;
 		if (bag instanceof VelvetPouch) {
 			badge = Badge.BAG_BOUGHT_VELVET_POUCH;
@@ -599,26 +698,28 @@ public class Badges {
 		} else if (bag instanceof MagicalHolster) {
 			badge = Badge.BAG_BOUGHT_MAGICAL_HOLSTER;
 		}
-		
+
 		if (badge != null) {
-			
+
 			local.add( badge );
-			
+
 			if (!local.contains( Badge.ALL_BAGS_BOUGHT ) &&
 				local.contains( Badge.BAG_BOUGHT_VELVET_POUCH ) &&
 				local.contains( Badge.BAG_BOUGHT_SCROLL_HOLDER ) &&
 				local.contains( Badge.BAG_BOUGHT_POTION_BANDOLIER ) &&
 				local.contains( Badge.BAG_BOUGHT_MAGICAL_HOLSTER )) {
-						
+
 					badge = Badge.ALL_BAGS_BOUGHT;
 					local.add( badge );
 					displayBadge( badge );
 			}
 		}
 	}
-	
+	/**
+	 * 验证所有类型的物品是否已被鉴定，并授予相应徽章。
+	 */
 	public static void validateItemsIdentified() {
-		
+		// 遍历所有分类，若某一分类的所有物品均被见过，则解锁并显示其对应的徽章
 		for (Catalog cat : Catalog.values()){
 			if (cat.allSeen()){
 				Badge b = Catalog.catalogBadges.get(cat);
@@ -627,7 +728,7 @@ public class Badges {
 				}
 			}
 		}
-		
+
 		if (isUnlocked( Badge.ALL_WEAPONS_IDENTIFIED ) &&
 				isUnlocked( Badge.ALL_ARMOR_IDENTIFIED ) &&
 				isUnlocked( Badge.ALL_WANDS_IDENTIFIED ) &&
@@ -642,320 +743,422 @@ public class Badges {
 			}
 		}
 	}
-	
+
+	/**
+	 * 验证并添加“死于火”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromFire() {
-		Badge badge = Badge.DEATH_FROM_FIRE;
-		local.add( badge );
-		displayBadge( badge );
-		
-		validateDeathFromAll();
+	    Badge badge = Badge.DEATH_FROM_FIRE;
+	    local.add( badge );
+	    displayBadge( badge );
+
+	    validateDeathFromAll();
 	}
-	
+
+	/**
+	 * 验证并添加“死于毒”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromPoison() {
-		Badge badge = Badge.DEATH_FROM_POISON;
-		local.add( badge );
-		displayBadge( badge );
-		
-		validateDeathFromAll();
+	    Badge badge = Badge.DEATH_FROM_POISON;
+	    local.add( badge );
+	    displayBadge( badge );
+
+	    validateDeathFromAll();
 	}
-	
+
+	/**
+	 * 验证并添加“死于毒气”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromGas() {
-		Badge badge = Badge.DEATH_FROM_GAS;
-		local.add( badge );
-		displayBadge( badge );
-		
-		validateDeathFromAll();
+	    Badge badge = Badge.DEATH_FROM_GAS;
+	    local.add( badge );
+	    displayBadge( badge );
+
+	    validateDeathFromAll();
 	}
-	
+
+	/**
+	 * 验证并添加“死于饥饿”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromHunger() {
-		Badge badge = Badge.DEATH_FROM_HUNGER;
-		local.add( badge );
-		displayBadge( badge );
-		
-		validateDeathFromAll();
+	    Badge badge = Badge.DEATH_FROM_HUNGER;
+	    local.add( badge );
+	    displayBadge( badge );
+
+	    validateDeathFromAll();
 	}
 
+	/**
+	 * 验证并添加“死于坠落”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromFalling() {
-		Badge badge = Badge.DEATH_FROM_FALLING;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.DEATH_FROM_FALLING;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		validateDeathFromAll();
+	    validateDeathFromAll();
 	}
 
+	/**
+	 * 验证并添加“死于敌方魔法”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromEnemyMagic() {
-		Badge badge = Badge.DEATH_FROM_ENEMY_MAGIC;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.DEATH_FROM_ENEMY_MAGIC;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		validateDeathFromAll();
+	    validateDeathFromAll();
 	}
-	
+
+	/**
+	 * 验证并添加“死于友方魔法”徽章。
+	 * 将徽章添加到本地收集列表中，并展示该徽章，随后检查所有死亡原因的徽章是否已验证。
+	 */
 	public static void validateDeathFromFriendlyMagic() {
-		Badge badge = Badge.DEATH_FROM_FRIENDLY_MAGIC;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.DEATH_FROM_FRIENDLY_MAGIC;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		validateDeathFromAll();
+	    validateDeathFromAll();
 	}
 
+	/**
+	 * 验证是否通过了祭品死亡的成就。
+	 * 当玩家通过祭品方式死亡时，此方法被调用，以检查是否满足获得相关成就的条件。
+	 * 如果满足条件，将添加并显示相应的成就徽章。
+	 */
 	public static void validateDeathFromSacrifice() {
-		Badge badge = Badge.DEATH_FROM_SACRIFICE;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.DEATH_FROM_SACRIFICE;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		validateDeathFromAll();
+	    validateDeathFromAll();
 	}
 
+	/**
+	 * 验证是否通过了grim trap死亡的成就。
+	 * 当玩家通过grim trap方式死亡时，此方法被调用，以检查是否满足获得相关成就的条件。
+	 * 如果满足条件，将添加并显示相应的成就徽章。
+	 */
 	public static void validateDeathFromGrimOrDisintTrap() {
-		Badge badge = Badge.DEATH_FROM_GRIM_TRAP;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.DEATH_FROM_GRIM_TRAP;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		validateDeathFromAll();
+	    validateDeathFromAll();
 	}
-	
+
+	/**
+	 * 验证是否获得了所有死亡方式的成就。
+	 * 此方法检查玩家是否通过了所有可能的死亡方式，包括火、毒、气体、饥饿、坠落、敌方魔法、友方魔法、祭品和grim trap。
+	 * 如果玩家通过了所有这些死亡方式，将检查是否已经获得了“死亡大满贯”成就徽章。
+	 * 如果没有，将显示该成就徽章。
+	 */
 	private static void validateDeathFromAll() {
-		if (isUnlocked( Badge.DEATH_FROM_FIRE ) &&
-				isUnlocked( Badge.DEATH_FROM_POISON ) &&
-				isUnlocked( Badge.DEATH_FROM_GAS ) &&
-				isUnlocked( Badge.DEATH_FROM_HUNGER) &&
-				isUnlocked( Badge.DEATH_FROM_FALLING) &&
-				isUnlocked( Badge.DEATH_FROM_ENEMY_MAGIC) &&
-				isUnlocked( Badge.DEATH_FROM_FRIENDLY_MAGIC) &&
-				isUnlocked( Badge.DEATH_FROM_SACRIFICE) &&
-				isUnlocked( Badge.DEATH_FROM_GRIM_TRAP)) {
+	    if (isUnlocked( Badge.DEATH_FROM_FIRE ) &&
+	            isUnlocked( Badge.DEATH_FROM_POISON ) &&
+	            isUnlocked( Badge.DEATH_FROM_GAS ) &&
+	            isUnlocked( Badge.DEATH_FROM_HUNGER) &&
+	            isUnlocked( Badge.DEATH_FROM_FALLING) &&
+	            isUnlocked( Badge.DEATH_FROM_ENEMY_MAGIC) &&
+	            isUnlocked( Badge.DEATH_FROM_FRIENDLY_MAGIC) &&
+	            isUnlocked( Badge.DEATH_FROM_SACRIFICE) &&
+	            isUnlocked( Badge.DEATH_FROM_GRIM_TRAP)) {
 
-			Badge badge = Badge.DEATH_FROM_ALL;
-			if (!isUnlocked( badge )) {
-				displayBadge( badge );
-			}
-		}
+	        Badge badge = Badge.DEATH_FROM_ALL;
+	        if (!isUnlocked( badge )) {
+	            displayBadge( badge );
+	        }
+	    }
 	}
 
+	/**
+	 * 首杀Boss时，各职业对应的徽章列表。
+	 * 采用LinkedHashMap保持插入顺序，以便于后续可能的顺序依赖处理。
+	 */
 	private static LinkedHashMap<HeroClass, Badge> firstBossClassBadges = new LinkedHashMap<>();
 	static {
-		firstBossClassBadges.put(HeroClass.WARRIOR, Badge.BOSS_SLAIN_1_WARRIOR);
-		firstBossClassBadges.put(HeroClass.MAGE, Badge.BOSS_SLAIN_1_MAGE);
-		firstBossClassBadges.put(HeroClass.ROGUE, Badge.BOSS_SLAIN_1_ROGUE);
-		firstBossClassBadges.put(HeroClass.HUNTRESS, Badge.BOSS_SLAIN_1_HUNTRESS);
-		firstBossClassBadges.put(HeroClass.DUELIST, Badge.BOSS_SLAIN_1_DUELIST);
+	    firstBossClassBadges.put(HeroClass.WARRIOR, Badge.BOSS_SLAIN_1_WARRIOR);
+	    firstBossClassBadges.put(HeroClass.MAGE, Badge.BOSS_SLAIN_1_MAGE);
+	    firstBossClassBadges.put(HeroClass.ROGUE, Badge.BOSS_SLAIN_1_ROGUE);
+	    firstBossClassBadges.put(HeroClass.HUNTRESS, Badge.BOSS_SLAIN_1_HUNTRESS);
+	    firstBossClassBadges.put(HeroClass.DUELIST, Badge.BOSS_SLAIN_1_DUELIST);
 	}
 
+	/**
+	 * 胜利时，各职业对应的徽章列表。
+	 * 采用LinkedHashMap保持插入顺序，以便于后续可能的顺序依赖处理。
+	 */
 	private static LinkedHashMap<HeroClass, Badge> victoryClassBadges = new LinkedHashMap<>();
 	static {
-		victoryClassBadges.put(HeroClass.WARRIOR, Badge.VICTORY_WARRIOR);
-		victoryClassBadges.put(HeroClass.MAGE, Badge.VICTORY_MAGE);
-		victoryClassBadges.put(HeroClass.ROGUE, Badge.VICTORY_ROGUE);
-		victoryClassBadges.put(HeroClass.HUNTRESS, Badge.VICTORY_HUNTRESS);
-		victoryClassBadges.put(HeroClass.DUELIST, Badge.VICTORY_DUELIST);
+	    victoryClassBadges.put(HeroClass.WARRIOR, Badge.VICTORY_WARRIOR);
+	    victoryClassBadges.put(HeroClass.MAGE, Badge.VICTORY_MAGE);
+	    victoryClassBadges.put(HeroClass.ROGUE, Badge.VICTORY_ROGUE);
+	    victoryClassBadges.put(HeroClass.HUNTRESS, Badge.VICTORY_HUNTRESS);
+	    victoryClassBadges.put(HeroClass.DUELIST, Badge.VICTORY_DUELIST);
 	}
 
+	/**
+	 * 击杀第三个Boss时，各副职业对应的徽章列表。
+	 * 采用LinkedHashMap保持插入顺序，以便于后续可能的顺序依赖处理。
+	 */
 	private static LinkedHashMap<HeroSubClass, Badge> thirdBossSubclassBadges = new LinkedHashMap<>();
 	static {
-		thirdBossSubclassBadges.put(HeroSubClass.BERSERKER, Badge.BOSS_SLAIN_3_BERSERKER);
-		thirdBossSubclassBadges.put(HeroSubClass.GLADIATOR, Badge.BOSS_SLAIN_3_GLADIATOR);
-		thirdBossSubclassBadges.put(HeroSubClass.BATTLEMAGE, Badge.BOSS_SLAIN_3_BATTLEMAGE);
-		thirdBossSubclassBadges.put(HeroSubClass.WARLOCK, Badge.BOSS_SLAIN_3_WARLOCK);
-		thirdBossSubclassBadges.put(HeroSubClass.ASSASSIN, Badge.BOSS_SLAIN_3_ASSASSIN);
-		thirdBossSubclassBadges.put(HeroSubClass.FREERUNNER, Badge.BOSS_SLAIN_3_FREERUNNER);
-		thirdBossSubclassBadges.put(HeroSubClass.SNIPER, Badge.BOSS_SLAIN_3_SNIPER);
-		thirdBossSubclassBadges.put(HeroSubClass.WARDEN, Badge.BOSS_SLAIN_3_WARDEN);
-		thirdBossSubclassBadges.put(HeroSubClass.CHAMPION, Badge.BOSS_SLAIN_3_CHAMPION);
-		thirdBossSubclassBadges.put(HeroSubClass.MONK, Badge.BOSS_SLAIN_3_MONK);
+	    thirdBossSubclassBadges.put(HeroSubClass.BERSERKER, Badge.BOSS_SLAIN_3_BERSERKER);
+	    thirdBossSubclassBadges.put(HeroSubClass.GLADIATOR, Badge.BOSS_SLAIN_3_GLADIATOR);
+	    thirdBossSubclassBadges.put(HeroSubClass.BATTLEMAGE, Badge.BOSS_SLAIN_3_BATTLEMAGE);
+	    thirdBossSubclassBadges.put(HeroSubClass.WARLOCK, Badge.BOSS_SLAIN_3_WARLOCK);
+	    thirdBossSubclassBadges.put(HeroSubClass.ASSASSIN, Badge.BOSS_SLAIN_3_ASSASSIN);
+	    thirdBossSubclassBadges.put(HeroSubClass.FREERUNNER, Badge.BOSS_SLAIN_3_FREERUNNER);
+	    thirdBossSubclassBadges.put(HeroSubClass.SNIPER, Badge.BOSS_SLAIN_3_SNIPER);
+	    thirdBossSubclassBadges.put(HeroSubClass.WARDEN, Badge.BOSS_SLAIN_3_WARDEN);
+	    thirdBossSubclassBadges.put(HeroSubClass.CHAMPION, Badge.BOSS_SLAIN_3_CHAMPION);
+	    thirdBossSubclassBadges.put(HeroSubClass.MONK, Badge.BOSS_SLAIN_3_MONK);
 	}
 	
+	/**
+	 * 验证是否击败了特定层级的boss，并授予相应的徽章。
+	 * 根据地牢深度，决定授予哪个boss击败徽章。
+	 * 如果击败了所有对应类别的boss，还会授予额外的徽章。
+	 */
 	public static void validateBossSlain() {
-		Badge badge = null;
-		switch (Dungeon.depth) {
-		case 5:
-			badge = Badge.BOSS_SLAIN_1;
-			break;
-		case 10:
-			badge = Badge.BOSS_SLAIN_2;
-			break;
-		case 15:
-			badge = Badge.BOSS_SLAIN_3;
-			break;
-		case 20:
-			badge = Badge.BOSS_SLAIN_4;
-			break;
-		}
-		
-		if (badge != null) {
-			local.add( badge );
-			displayBadge( badge );
-			
-			if (badge == Badge.BOSS_SLAIN_1) {
-				badge = firstBossClassBadges.get(Dungeon.hero.heroClass);
-				if (badge == null) return;
-				local.add( badge );
-				unlock(badge);
+	    Badge badge = null;
+	    // 根据地牢深度，选择对应的boss击败徽章
+	    switch (Dungeon.depth) {
+	        case 5:
+	            badge = Badge.BOSS_SLAIN_1;
+	            break;
+	        case 10:
+	            badge = Badge.BOSS_SLAIN_2;
+	            break;
+	        case 15:
+	            badge = Badge.BOSS_SLAIN_3;
+	            break;
+	        case 20:
+	            badge = Badge.BOSS_SLAIN_4;
+	            break;
+	    }
 
-				boolean allUnlocked = true;
-				for (Badge b : firstBossClassBadges.values()){
-					if (!isUnlocked(b)){
-						allUnlocked = false;
-						break;
-					}
-				}
-				if (allUnlocked) {
-					
-					badge = Badge.BOSS_SLAIN_1_ALL_CLASSES;
-					if (!isUnlocked( badge )) {
-						displayBadge( badge );
-					}
-				}
-			} else if (badge == Badge.BOSS_SLAIN_3) {
+	    if (badge != null) {
+	        local.add(badge);
+	        displayBadge(badge);
 
-				badge = thirdBossSubclassBadges.get(Dungeon.hero.subClass);
-				if (badge == null) return;
-				local.add( badge );
-				unlock(badge);
+	        // 如果击败了第一个boss，检查是否解锁了所有对应职业的徽章
+	        if (badge == Badge.BOSS_SLAIN_1) {
+	            badge = firstBossClassBadges.get(Dungeon.hero.heroClass);
+	            if (badge == null) return;
+	            local.add(badge);
+	            unlock(badge);
 
-				boolean allUnlocked = true;
-				for (Badge b : thirdBossSubclassBadges.values()){
-					if (!isUnlocked(b)){
-						allUnlocked = false;
-						break;
-					}
-				}
-				if (allUnlocked) {
-					badge = Badge.BOSS_SLAIN_3_ALL_SUBCLASSES;
-					if (!isUnlocked( badge )) {
-						displayBadge( badge );
-					}
-				}
-			}
+	            // 如果所有职业的首个boss徽章都已解锁，授予全职业徽章
+	            boolean allUnlocked = true;
+	            for (Badge b : firstBossClassBadges.values()){
+	                if (!isUnlocked(b)){
+	                    allUnlocked = false;
+	                    break;
+	                }
+	            }
+	            if (allUnlocked) {
+	                badge = Badge.BOSS_SLAIN_1_ALL_CLASSES;
+	                if (!isUnlocked(badge)) {
+	                    displayBadge(badge);
+	                }
+	            }
+	        } else if (badge == Badge.BOSS_SLAIN_3) {
+	            // 如果击败了第三个boss，检查是否解锁了所有对应副职业的徽章
+	            badge = thirdBossSubclassBadges.get(Dungeon.hero.subClass);
+	            if (badge == null) return;
+	            local.add(badge);
+	            unlock(badge);
 
-			if (Statistics.qualifiedForBossRemainsBadge && Dungeon.hero.belongings.getItem(RemainsItem.class) != null){
-				badge = Badge.BOSS_SLAIN_REMAINS;
-				local.add( badge );
-				displayBadge( badge );
-			}
+	            boolean allUnlocked = true;
+	            for (Badge b : thirdBossSubclassBadges.values()){
+	                if (!isUnlocked(b)){
+	                    allUnlocked = false;
+	                    break;
+	                }
+	            }
+	            if (allUnlocked) {
+	                badge = Badge.BOSS_SLAIN_3_ALL_SUBCLASSES;
+	                if (!isUnlocked(badge)) {
+	                    displayBadge(badge);
+	                }
+	            }
+	        }
 
-		}
+	        // 如果满足条件，授予boss残骸徽章
+	        if (Statistics.qualifiedForBossRemainsBadge && Dungeon.hero.belongings.getItem(RemainsItem.class) != null){
+	            badge = Badge.BOSS_SLAIN_REMAINS;
+	            local.add(badge);
+	            displayBadge(badge);
+	        }
+	    }
 	}
 
+	/**
+	 * 验证是否完成了特定层级的boss挑战，并授予相应的徽章。
+	 * 根据地牢深度，决定授予哪个boss挑战徽章。
+	 */
 	public static void validateBossChallengeCompleted(){
-		Badge badge = null;
-		switch (Dungeon.depth) {
-			case 5:
-				badge = Badge.BOSS_CHALLENGE_1;
-				break;
-			case 10:
-				badge = Badge.BOSS_CHALLENGE_2;
-				break;
-			case 15:
-				badge = Badge.BOSS_CHALLENGE_3;
-				break;
-			case 20:
-				badge = Badge.BOSS_CHALLENGE_4;
-				break;
-			case 25:
-				badge = Badge.BOSS_CHALLENGE_5;
-				break;
-		}
+	    Badge badge = null;
+	    // 根据地牢深度，选择对应的boss挑战徽章
+	    switch (Dungeon.depth) {
+	        case 5:
+	            badge = Badge.BOSS_CHALLENGE_1;
+	            break;
+	        case 10:
+	            badge = Badge.BOSS_CHALLENGE_2;
+	            break;
+	        case 15:
+	            badge = Badge.BOSS_CHALLENGE_3;
+	            break;
+	        case 20:
+	            badge = Badge.BOSS_CHALLENGE_4;
+	            break;
+	        case 25:
+	            badge = Badge.BOSS_CHALLENGE_5;
+	            break;
+	    }
 
-		if (badge != null) {
-			local.add(badge);
-			displayBadge(badge);
-		}
+	    if (badge != null) {
+	        local.add(badge);
+	        displayBadge(badge);
+	    }
 	}
-	
+
+	/**
+	 * 验证英雄是否精通了某个职业，并授予相应的精通徽章。
+	 * 根据英雄的职业，选择对应的精通徽章。
+	 */
 	public static void validateMastery() {
-		
-		Badge badge = null;
-		switch (Dungeon.hero.heroClass) {
-			case WARRIOR:
-				badge = Badge.MASTERY_WARRIOR;
-				break;
-			case MAGE:
-				badge = Badge.MASTERY_MAGE;
-				break;
-			case ROGUE:
-				badge = Badge.MASTERY_ROGUE;
-				break;
-			case HUNTRESS:
-				badge = Badge.MASTERY_HUNTRESS;
-				break;
-			case DUELIST:
-				badge = Badge.MASTERY_DUELIST;
-				break;
-		}
-		
-		unlock(badge);
+	    Badge badge = null;
+	    // 根据英雄职业，选择对应的精通徽章
+	    switch (Dungeon.hero.heroClass) {
+	        case WARRIOR:
+	            badge = Badge.MASTERY_WARRIOR;
+	            break;
+	        case MAGE:
+	            badge = Badge.MASTERY_MAGE;
+	            break;
+	        case ROGUE:
+	            badge = Badge.MASTERY_ROGUE;
+	            break;
+	        case HUNTRESS:
+	            badge = Badge.MASTERY_HUNTRESS;
+	            break;
+	        case DUELIST:
+	            badge = Badge.MASTERY_DUELIST;
+	            break;
+	    }
+
+	    unlock(badge);
 	}
 
+	/**
+	 * 校验并解锁Ratmogrify成就。
+	 * 当特定条件满足时，此方法被调用以解锁相应的成就徽章。
+	 */
 	public static void validateRatmogrify(){
-		unlock(Badge.FOUND_RATMOGRIFY);
+	    unlock(Badge.FOUND_RATMOGRIFY);
 	}
-	
+
+	/**
+	 * 校验并解锁Mage成就。
+	 * 如果已使用升级次数达到1次且Mage成就未被解锁，则显示Mage成就徽章。
+	 */
 	public static void validateMageUnlock(){
-		if (Statistics.upgradesUsed >= 1 && !isUnlocked(Badge.UNLOCK_MAGE)){
-			displayBadge( Badge.UNLOCK_MAGE );
-		}
+	    if (Statistics.upgradesUsed >= 1 && !isUnlocked(Badge.UNLOCK_MAGE)){
+	        displayBadge( Badge.UNLOCK_MAGE );
+	    }
 	}
-	
+
+	/**
+	 * 校验并解锁Rogue成就。
+	 * 如果发起的潜行攻击次数达到10次且Rogue成就未被解锁，则显示Rogue成就徽章。
+	 */
 	public static void validateRogueUnlock(){
-		if (Statistics.sneakAttacks >= 10 && !isUnlocked(Badge.UNLOCK_ROGUE)){
-			displayBadge( Badge.UNLOCK_ROGUE );
-		}
+	    if (Statistics.sneakAttacks >= 10 && !isUnlocked(Badge.UNLOCK_ROGUE)){
+	        displayBadge( Badge.UNLOCK_ROGUE );
+	    }
 	}
-	
+
+	/**
+	 * 校验并解锁Huntress成就。
+	 * 如果投掷攻击次数达到10次且Huntress成就未被解锁，则显示Huntress成就徽章。
+	 */
 	public static void validateHuntressUnlock(){
-		if (Statistics.thrownAttacks >= 10 && !isUnlocked(Badge.UNLOCK_HUNTRESS)){
-			displayBadge( Badge.UNLOCK_HUNTRESS );
-		}
+	    if (Statistics.thrownAttacks >= 10 && !isUnlocked(Badge.UNLOCK_HUNTRESS)){
+	        displayBadge( Badge.UNLOCK_HUNTRESS );
+	    }
 	}
 
+	/**
+	 * 校验并解锁Duelist成就。
+	 * 如果当前英雄拥有一把至少二级的近战武器，且武器的力量需求不超过英雄的力量值，
+	 * 则可能解锁Duelist成就。武器必须被识别，或者在未识别状态下力量需求为0。
+	 */
 	public static void validateDuelistUnlock(){
-		if (!isUnlocked(Badge.UNLOCK_DUELIST) && Dungeon.hero != null
-				&& Dungeon.hero.belongings.weapon instanceof MeleeWeapon
-				&& ((MeleeWeapon) Dungeon.hero.belongings.weapon).tier >= 2
-				&& ((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() <= Dungeon.hero.STR()){
+	    if (!isUnlocked(Badge.UNLOCK_DUELIST) && Dungeon.hero != null
+	            && Dungeon.hero.belongings.weapon instanceof MeleeWeapon
+	            && ((MeleeWeapon) Dungeon.hero.belongings.weapon).tier >= 2
+	            && ((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() <= Dungeon.hero.STR()){
 
-			if (Dungeon.hero.belongings.weapon.isIdentified() &&
-					((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() <= Dungeon.hero.STR()) {
-				displayBadge(Badge.UNLOCK_DUELIST);
+	        if (Dungeon.hero.belongings.weapon.isIdentified() &&
+	                ((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq() <= Dungeon.hero.STR()) {
+	            displayBadge(Badge.UNLOCK_DUELIST);
 
-			} else if (!Dungeon.hero.belongings.weapon.isIdentified() &&
-					((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq(0) <= Dungeon.hero.STR()){
-				displayBadge(Badge.UNLOCK_DUELIST);
-			}
-		}
+	        } else if (!Dungeon.hero.belongings.weapon.isIdentified() &&
+	                ((MeleeWeapon) Dungeon.hero.belongings.weapon).STRReq(0) <= Dungeon.hero.STR()){
+	            displayBadge(Badge.UNLOCK_DUELIST);
+	        }
+	    }
 	}
-	
+
+	/**
+	 * 校验并授予掌握组合成就。
+	 * 如果在战斗中施放了10次连击，则解锁掌握组合成就。
+	 */
 	public static void validateMasteryCombo( int n ) {
-		if (!local.contains( Badge.MASTERY_COMBO ) && n == 10) {
-			Badge badge = Badge.MASTERY_COMBO;
-			local.add( badge );
-			displayBadge( badge );
-		}
+	    if (!local.contains( Badge.MASTERY_COMBO ) && n == 10) {
+	        Badge badge = Badge.MASTERY_COMBO;
+	        local.add( badge );
+	        displayBadge( badge );
+	    }
 	}
-	
+
+	/**
+	 * 校验并解锁胜利成就及对应英雄的胜利成就。
+	 * 如果已击败最终boss，则解锁胜利成就。同时，根据英雄类型解锁相应的英雄胜利成就。
+	 * 如果所有英雄的胜利成就都被解锁，则解锁全英雄胜利成就。
+	 */
 	public static void validateVictory() {
 
-		Badge badge = Badge.VICTORY;
-		local.add( badge );
-		displayBadge( badge );
+	    Badge badge = Badge.VICTORY;
+	    local.add( badge );
+	    displayBadge( badge );
 
-		badge = victoryClassBadges.get(Dungeon.hero.heroClass);
-		if (badge == null) return;
-		local.add( badge );
-		unlock(badge);
+	    badge = victoryClassBadges.get(Dungeon.hero.heroClass);
+	    if (badge == null) return;
+	    local.add( badge );
+	    unlock(badge);
 
-		boolean allUnlocked = true;
-		for (Badge b : victoryClassBadges.values()){
-			if (!isUnlocked(b)){
-				allUnlocked = false;
-				break;
-			}
-		}
-		if (allUnlocked){
-			badge = Badge.VICTORY_ALL_CLASSES;
-			displayBadge( badge );
-		}
+	    boolean allUnlocked = true;
+	    for (Badge b : victoryClassBadges.values()){
+	        if (!isUnlocked(b)){
+	            allUnlocked = false;
+	            break;
+	        }
+	    }
+	    if (allUnlocked){
+	        badge = Badge.VICTORY_ALL_CLASSES;
+	        displayBadge( badge );
+	    }
 	}
 
 	public static void validateNoKilling() {
@@ -999,105 +1202,137 @@ public class Badges {
 		displayBadge( badge );
 	}
 
+	/**
+	 * 验证玩家得分并授予相应的徽章。
+	 * 如果得分达到特定阈值，则添加相应的徽章到本地存储，并显示徽章。
+	 * @param score 玩家得分
+	 */
 	public static void validateHighScore( int score ){
-		Badge badge = null;
-		if (score >= 5000) {
-			badge = Badge.HIGH_SCORE_1;
-			local.add( badge );
-		}
-		if (score >= 25_000) {
-			unlock(badge);
-			badge = Badge.HIGH_SCORE_2;
-			local.add( badge );
-		}
-		if (score >= 100_000) {
-			unlock(badge);
-			badge = Badge.HIGH_SCORE_3;
-			local.add( badge );
-		}
-		if (score >= 250_000) {
-			unlock(badge);
-			badge = Badge.HIGH_SCORE_4;
-			local.add( badge );
-		}
-		if (score >= 1_000_000) {
-			unlock(badge);
-			badge = Badge.HIGH_SCORE_5;
-			local.add( badge );
-		}
+	    Badge badge = null;
+	    // 根据得分授予不同等级的徽章
+	    if (score >= 5000) {
+	        badge = Badge.HIGH_SCORE_1;
+	        local.add( badge );
+	    }
+	    if (score >= 25_000) {
+	        unlock(badge);
+	        badge = Badge.HIGH_SCORE_2;
+	        local.add( badge );
+	    }
+	    if (score >= 100_000) {
+	        unlock(badge);
+	        badge = Badge.HIGH_SCORE_3;
+	        local.add( badge );
+	    }
+	    if (score >= 250_000) {
+	        unlock(badge);
+	        badge = Badge.HIGH_SCORE_4;
+	        local.add( badge );
+	    }
+	    if (score >= 1_000_000) {
+	        unlock(badge);
+	        badge = Badge.HIGH_SCORE_5;
+	        local.add( badge );
+	    }
 
-		displayBadge( badge );
+	    displayBadge( badge );
 	}
-	
+
+	/**
+	 * 显示结束徽章并根据玩家是否收集到遗迹物品，决定是否显示额外的徽章。
+	 */
 	public static void validateHappyEnd() {
-		displayBadge( Badge.HAPPY_END );
+	    displayBadge( Badge.HAPPY_END );
 
-		if( Dungeon.hero.belongings.getItem(RemainsItem.class) != null ){
-			displayBadge( Badge.HAPPY_END_REMAINS );
-		}
+	    // 如果玩家收集到遗迹物品，则显示额外的徽章
+	    if( Dungeon.hero.belongings.getItem(RemainsItem.class) != null ){
+	        displayBadge( Badge.HAPPY_END_REMAINS );
+	    }
 	}
 
+	/**
+	 * 根据玩家完成的挑战次数验证并授予徽章。
+	 * @param challenges 玩家完成的挑战次数
+	 */
 	public static void validateChampion( int challenges ) {
-		if (challenges == 0) return;
-		Badge badge = null;
-		if (challenges >= 1) {
-			badge = Badge.CHAMPION_1;
-		}
-		if (challenges >= 3){
-			unlock(badge);
-			badge = Badge.CHAMPION_2;
-		}
-		if (challenges >= 6){
-			unlock(badge);
-			badge = Badge.CHAMPION_3;
-		}
-		local.add(badge);
-		displayBadge( badge );
+	    if (challenges == 0) return;
+	    Badge badge = null;
+	    // 根据挑战次数授予不同等级的徽章
+	    if (challenges >= 1) {
+	        badge = Badge.CHAMPION_1;
+	    }
+	    if (challenges >= 3){
+	        unlock(badge);
+	        badge = Badge.CHAMPION_2;
+	    }
+	    if (challenges >= 6){
+	        unlock(badge);
+	        badge = Badge.CHAMPION_3;
+	    }
+	    local.add(badge);
+	    displayBadge( badge );
 	}
-	
+
+	/**
+	 * 显示给定的徽章。如果徽章已解锁且非元徽章，则仅记录日志；
+	 * 否则，解锁徽章，记录日志，并显示徽章动画。
+	 * @param badge 徽章实例
+	 */
 	private static void displayBadge( Badge badge ) {
-		
-		if (badge == null || !Dungeon.customSeedText.isEmpty()) {
-			return;
-		}
-		
-		if (isUnlocked( badge )) {
-			
-			if (!badge.meta) {
-				GLog.h( Messages.get(Badges.class, "endorsed", badge.title()) );
-				GLog.newLine();
-			}
-			
-		} else {
-			
-			unlock(badge);
-			
-			GLog.h( Messages.get(Badges.class, "new", badge.title() + " (" + badge.desc() + ")") );
-			GLog.newLine();
-			PixelScene.showBadge( badge );
-		}
+	    if (badge == null || !Dungeon.customSeedText.isEmpty()) {
+	        return;
+	    }
+	    if (isUnlocked( badge )) {
+	        // 已解锁的非元徽章仅记录日志
+	        if (!badge.meta) {
+	            GLog.h( Messages.get(Badges.class, "endorsed", badge.title()) );
+	            GLog.newLine();
+	        }
+	    } else {
+	        unlock(badge);
+	        GLog.h( Messages.get(Badges.class, "new", badge.title() + " (" + badge.desc() + ")") );
+	        GLog.newLine();
+	        PixelScene.showBadge( badge );
+	    }
 	}
-	
+
+	/**
+	 * 检查徽章是否已解锁。
+	 * @param badge 徽章实例
+	 * @return 徽章是否已解锁
+	 */
 	public static boolean isUnlocked( Badge badge ) {
-		return global.contains( badge );
+	    return global.contains( badge );
 	}
-	
+
+	/**
+	 * 获取所有已解锁的徽章集合。
+	 * @return 已解锁的徽章集合
+	 */
 	public static HashSet<Badge> allUnlocked(){
-		loadGlobal();
-		return new HashSet<>(global);
+	    loadGlobal();
+	    return new HashSet<>(global);
 	}
-	
+
+	/**
+	 * 移除指定的徽章并标记需要保存。
+	 * @param badge 徽章实例
+	 */
 	public static void disown( Badge badge ) {
-		loadGlobal();
-		global.remove( badge );
-		saveNeeded = true;
+	    loadGlobal();
+	    global.remove( badge );
+	    saveNeeded = true;
 	}
-	
+
+	/**
+	 * 解锁指定的徽章。如果徽章未被解锁且当前没有自定义种子，则添加到全局存储并标记需要保存。
+	 * @param badge 徽章实例
+	 */
 	public static void unlock( Badge badge ){
-		if (!isUnlocked(badge) && Dungeon.customSeedText.isEmpty()){
-			global.add( badge );
-			saveNeeded = true;
-		}
+	    if (!isUnlocked(badge) && Dungeon.customSeedText.isEmpty()){
+	        global.add( badge );
+	        saveNeeded = true;
+	    }
 	}
 
 	public static List<Badge> filterReplacedBadges( boolean global ) {

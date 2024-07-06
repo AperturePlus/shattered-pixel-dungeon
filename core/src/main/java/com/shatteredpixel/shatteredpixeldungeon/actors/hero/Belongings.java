@@ -115,15 +115,25 @@ public class Belongings implements Iterable<Item> {
 	//used by the champion subclass
 	public KindOfWeapon secondWep = null;
 
-	//*** these accessor methods are so that worn items can be affected by various effects/debuffs
-	// we still want to access the raw equipped items in cases where effects should be ignored though,
-	// such as when equipping something, showing an interface, or dealing with items from a dead hero
 
-	//normally the primary equipped weapon, but can also be a thrown weapon or an ability's weapon
-	public KindOfWeapon attackingWeapon(){
-		if (thrownWeapon != null) return thrownWeapon;
-		if (abilityWeapon != null) return abilityWeapon;
-		return weapon();
+	/**
+	 * 获取攻击所使用的武器。
+	 * 优先返回投掷武器，如果投掷武器不存在，则返回能力武器，如果两者都不存在，则调用weapon()方法获取武器。
+	 * 这样设计的目的是为了根据不同的战斗策略选择最适合的武器进行攻击。
+	 *	//*** these accessor methods are so that worn items can be affected by various effects/debuffs
+	 * 	// we still want to access the raw equipped items in cases where effects should be ignored though,
+	 * 	// such as when equipping something, showing an interface, or dealing with items from a dead hero
+	 *
+	 * 	//normally the primary equipped weapon, but can also be a thrown weapon or an ability's weapon
+	 * @return 当前攻击所使用的武器。
+	 */
+	public KindOfWeapon attackingWeapon() {
+	    // 检查是否有投掷武器，如果有，则直接返回投掷武器。
+	    if (thrownWeapon != null) return thrownWeapon;
+	    // 如果没有投掷武器，但有能力和武器，则返回能力武器。
+	    if (abilityWeapon != null) return abilityWeapon;
+	    // 如果既没有投掷武器也没有能力武器，则调用weapon()方法获取默认武器。
+	    return weapon();
 	}
 
 	//we cache whether belongings are lost to avoid lots of calls to hero.buff(LostInventory.class)

@@ -35,57 +35,100 @@ import com.watabou.utils.Random;
 
 import java.util.ArrayList;
 
+/**
+ * 金子类继承自物品类，代表游戏中的金币。
+ */
 public class Gold extends Item {
 
-	{
-		image = ItemSpriteSheet.GOLD;
-		stackable = true;
-	}
-	
-	public Gold() {
-		this( 1 );
-	}
-	
-	public Gold( int value ) {
-		this.quantity = value;
-	}
-	
-	@Override
-	public ArrayList<String> actions( Hero hero ) {
-		return new ArrayList<>();
-	}
-	
-	@Override
-	public boolean doPickUp(Hero hero, int pos) {
-		
-		Dungeon.gold += quantity;
-		Statistics.goldCollected += quantity;
-		Badges.validateGoldCollected();
+    {
+        // 初始化金子的图像和堆叠属性。
+        image = ItemSpriteSheet.GOLD;
+        stackable = true;
+    }
 
-		GameScene.pickUp( this, pos );
-		hero.sprite.showStatusWithIcon( CharSprite.NEUTRAL, Integer.toString(quantity), FloatingText.GOLD );
-		hero.spendAndNext( TIME_TO_PICK_UP );
-		
-		Sample.INSTANCE.play( Assets.Sounds.GOLD, 1, 1, Random.Float( 0.9f, 1.1f ) );
-		updateQuickslot();
-		
-		return true;
-	}
-	
-	@Override
-	public boolean isUpgradable() {
-		return false;
-	}
-	
-	@Override
-	public boolean isIdentified() {
-		return true;
-	}
-	
-	@Override
-	public Item random() {
-		quantity = Random.IntRange( 30 + Dungeon.depth * 10, 60 + Dungeon.depth * 20 );
-		return this;
-	}
+    /**
+     * 默认构造函数，调用带数量参数的构造函数。
+     */
+    public Gold() {
+        this(1);
+    }
+
+    /**
+     * 带数量参数的构造函数，用于指定金子的数量。
+     *
+     * @param value 金子的数量。
+     */
+    public Gold(int value) {
+        this.quantity = value;
+    }
+
+    /**
+     * 重写actions方法，金子没有特殊动作。
+     *
+     * @param hero 与金子交互的英雄。
+     * @return 一个空的字符串列表。
+     */
+    @Override
+    public ArrayList<String> actions(Hero hero) {
+        return new ArrayList<>();
+    }
+
+    /**
+     * 重写pickUp方法，处理英雄捡起金子的逻辑。
+     *
+     * @param hero 捡起金子的英雄。
+     * @param pos 金子的位置。
+     * @return 总是返回true，表示金子可以被捡起。
+     */
+    @Override
+    public boolean doPickUp(Hero hero, int pos) {
+        // 增加英雄捡起的金子数量到地下城的金子总量和统计信息中。
+        Dungeon.gold += quantity;
+        Statistics.goldCollected += quantity;
+        // 检查金子收集成就。
+        Badges.validateGoldCollected();
+        // 显示捡起金子的动画和信息。
+        GameScene.pickUp(this, pos);
+        hero.sprite.showStatusWithIcon(CharSprite.NEUTRAL, Integer.toString(quantity), FloatingText.GOLD);
+        // 花费捡起金子的时间。
+        hero.spendAndNext(TIME_TO_PICK_UP);
+        // 播放捡起金子的声音。
+        Sample.INSTANCE.play(Assets.Sounds.GOLD, 1, 1, Random.Float(0.9f, 1.1f));
+        // 更新快速槽位。
+        updateQuickslot();
+        return true;
+    }
+
+    /**
+     * 金子不可升级。
+     *
+     * @return 总是返回false。
+     */
+    @Override
+    public boolean isUpgradable() {
+        return false;
+    }
+
+    /**
+     * 金子总是被识别的。
+     *
+     * @return 总是返回true。
+     */
+    @Override
+    public boolean isIdentified() {
+        return true;
+    }
+
+    /**
+     * 生成一个随机数量的金子。
+     *
+     * @return 生成的金子对象本身，数量为随机值。
+     */
+    @Override
+    public Item random() {
+        // 金子的数量根据地下城的深度随机生成。
+        quantity = Random.IntRange(30 + Dungeon.depth * 10, 60 + Dungeon.depth * 20);
+        return this;
+    }
 
 }
