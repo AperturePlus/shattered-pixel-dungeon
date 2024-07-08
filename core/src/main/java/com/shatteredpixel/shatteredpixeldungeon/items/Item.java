@@ -523,103 +523,219 @@ public class Item implements Bundlable {
 		return this;
 	}
 	
-	public int visiblyUpgraded() {
-		return levelKnown ? level() : 0;
-	}
+	/**
+ * 计算并返回物品可见的升级等级。如果等级已知，则返回当前等级；否则，返回0。
+ *
+ * @return 物品的可见升级等级。
+ */
+public int visiblyUpgraded() {
+    return levelKnown ? level() : 0;
+}
 
-	public int buffedVisiblyUpgraded() {
-		return levelKnown ? buffedLvl() : 0;
-	}
-	
-	public boolean visiblyCursed() {
-		return cursed && cursedKnown;
-	}
-	
-	public boolean isUpgradable() {
-		return true;
-	}
-	
-	public boolean isIdentified() {
-		return levelKnown && cursedKnown;
-	}
-	
-	public boolean isEquipped( Hero hero ) {
-		return false;
-	}
+/**
+ * 计算并返回物品可见的增强升级等级。如果等级已知，则返回增强后的等级；否则，返回0。
+ *
+ * @return 物品的可见增强升级等级。
+ */
+public int buffedVisiblyUpgraded() {
+    return levelKnown ? buffedLvl() : 0;
+}
 
-	public final Item identify(){
-		return identify(true);
-	}
+/**
+ * 判断物品是否明显受到诅咒。物品被明显诅咒当且仅当其处于诅咒状态并且诅咒状态已知。
+ *
+ * @return 如果物品明显受到诅咒则返回真，否则返回假。
+ */
+public boolean visiblyCursed() {
+    return cursed && cursedKnown;
+}
 
-	public Item identify( boolean byHero ) {
+/**
+ * 指示物品总是可升级的。
+ *
+ * @return 总是返回真，表示物品可升级。
+ */
+public boolean isUpgradable() {
+    return true;
+}
 
-		if (byHero && Dungeon.hero != null && Dungeon.hero.isAlive()){
-			Catalog.setSeen(getClass());
-			if (!isIdentified()) Talent.onItemIdentified(Dungeon.hero, this);
-		}
+/**
+ * 判断物品是否已被识别。物品被识别当且仅当其等级和诅咒状态均已知。
+ *
+ * @return 如果物品已被识别则返回真，否则返回假。
+ */
+public boolean isIdentified() {
+    return levelKnown && cursedKnown;
+}
 
-		levelKnown = true;
-		cursedKnown = true;
-		Item.updateQuickslot();
-		
-		return this;
-	}
+/**
+ * 判断物品是否被英雄装备。
+ *
+ * @param hero 英雄对象。
+ * @return 如果物品被指定的英雄装备则返回真，否则返回假。
+ */
+public boolean isEquipped( Hero hero ) {
+    return false;
+}
+
+/**
+ * 标记物品为已识别状态。
+ *
+ * @return 返回自身引用，用于链式调用。
+ */
+public final Item identify(){
+    return identify(true);
+}
+
+/**
+ * 标记物品为已识别状态，可以选择由英雄执行识别操作。
+ *
+ * @param byHero 是否由英雄执行识别操作。
+ * @return 返回自身引用，用于链式调用。
+ */
+public Item identify( boolean byHero ) {
+
+    if (byHero && Dungeon.hero != null && Dungeon.hero.isAlive()){
+        Catalog.setSeen(getClass());
+        if (!isIdentified()) Talent.onItemIdentified(Dungeon.hero, this);
+    }
+
+    levelKnown = true;
+    cursedKnown = true;
+    Item.updateQuickslot();
+
+    return this;
+}
+
 	
 	public void onHeroGainExp( float levelPercent, Hero hero ){
 		//do nothing by default
 	}
 	
+	/**
+	 * 触发英雄的特殊效果。
+	 * 该方法通过向英雄的精灵对象发送一个突发信号，来激发特定的视觉效果。
+	 * 具体来说，它会创造5个表示“激发”效果的微粒，这些微粒将会瞬间出现在英雄周围，提供一个视觉上的反馈，
+	 * 表示某种特殊能力或状态已被激活。
+	 *
+	 * @param hero 方法的参数，代表需要触发特殊效果的英雄对象。这个参数不应该为null，方法内部也没有对它进行空检查。
+	 * 方法直接通过这个参数的成员访问其精灵对象，然后进一步触发效果。
+	 *
+	 * 注意：该方法没有返回值，它的目的是引发一个视觉效果，而不是返回任何数据。
+	 */
 	public static void evoke( Hero hero ) {
+		// 向英雄的精灵对象发送一个突发信号，创建5个表示“激发”效果的微粒
 		hero.sprite.emitter().burst( Speck.factory( Speck.EVOKE ), 5 );
 	}
 
+	/**
+	 * 获取物品的显示名称。
+	 * 如果物品有升级表现，则将升级信息格式化到名称中。
+	 * 如果物品的数量大于1，则将数量格式化到名称中。
+	 *
+	 * @return 格式化后的物品名称。
+	 */
 	public String title() {
+	    // 获取物品的基本名称
+	    String name = name();
 
-		String name = name();
+	    // 如果物品有可见的升级，将升级信息添加到名称中
+	    if (visiblyUpgraded() != 0)
+	        name = Messages.format( TXT_TO_STRING_LVL, name, visiblyUpgraded()  );
 
-		if (visiblyUpgraded() != 0)
-			name = Messages.format( TXT_TO_STRING_LVL, name, visiblyUpgraded()  );
+	    // 如果物品数量大于1，将数量添加到名称中
+	    if (quantity > 1)
+	        name = Messages.format( TXT_TO_STRING_X, name, quantity );
 
-		if (quantity > 1)
-			name = Messages.format( TXT_TO_STRING_X, name, quantity );
-
-		return name;
-
+	    return name;
 	}
-	
+
+	/**
+	 * 获取物品的名称。
+	 *
+	 * @return 物品的真正名称。
+	 */
 	public String name() {
-		return trueName();
-	}
-	
-	public final String trueName() {
-		return Messages.get(this, "name");
-	}
-	
-	public int image() {
-		return image;
-	}
-	
-	public ItemSprite.Glowing glowing() {
-		return null;
+	    return trueName();
 	}
 
-	public Emitter emitter() { return null; }
-	
+	/**
+	 * 获取物品的真正名称。
+	 * 通过Messages获取本地化后的物品名称。
+	 *
+	 * @return 本地化后的物品名称。
+	 */
+	public final String trueName() {
+	    return Messages.get(this, "name");
+	}
+
+	/**
+	 * 获取物品的图像索引。
+	 *
+	 * @return 物品的图像索引。
+	 */
+	public int image() {
+	    return image;
+	}
+
+	/**
+	 * 获取物品的发光效果。
+	 * 当前物品没有发光效果，返回null。
+	 *
+	 * @return 物品的发光效果。
+	 */
+	public ItemSprite.Glowing glowing() {
+	    return null;
+	}
+
+	/**
+	 * 获取物品的粒子效果。
+	 * 当前物品没有粒子效果，返回null。
+	 *
+	 * @return 物品的粒子效果。
+	 */
+	public Emitter emitter() {
+	    return null;
+	}
+
+	/**
+	 * 获取物品的描述信息。
+	 * 重定向到desc方法，以获取物品的详细描述。
+	 *
+	 * @return 物品的描述信息。
+	 */
 	public String info() {
-		return desc();
+	    return desc();
 	}
-	
+
+	/**
+	 * 获取物品的详细描述。
+	 * 通过Messages获取本地化后的物品描述。
+	 *
+	 * @return 本地化后的物品描述。
+	 */
 	public String desc() {
-		return Messages.get(this, "desc");
+	    return Messages.get(this, "desc");
 	}
-	
+
+	/**
+	 * 获取物品的数量。
+	 *
+	 * @return 物品的数量。
+	 */
 	public int quantity() {
-		return quantity;
+	    return quantity;
 	}
-	
+
+	/**
+	 * 设置物品的数量，并返回自身以支持链式调用。
+	 *
+	 * @param value 新的物品数量。
+	 * @return 修改后的物品对象。
+	 */
 	public Item quantity( int value ) {
-		quantity = value;
-		return this;
+	    quantity = value;
+	    return this;
 	}
 
 	//item's value in gold coins
@@ -632,13 +748,26 @@ public class Item implements Bundlable {
 		return 0;
 	}
 	
-	public Item virtual(){
-		Item item = Reflection.newInstance(getClass());
-		if (item == null) return null;
-		
-		item.quantity = 0;
-		item.level = level;
-		return item;
+	/**
+	 * 创建当前类的一个虚拟实例。
+	 * <p>
+	 * 通过反射机制创建当前类的新实例，用于实现某些特定的功能或测试。虚拟实例是指该实例的一些属性被初始化为特定值，
+	 * 例如数量设置为0，等级设置为当前对象的等级，以便于在不改变现有对象状态的情况下，进行操作或测试。
+	 *
+	 * @return 当前类的一个新实例，如果创建失败则返回null。
+	 */
+	public Item virtual() {
+	    // 通过反射创建当前类的新实例
+	    Item item = Reflection.newInstance(getClass());
+	    // 如果创建失败，则返回null
+	    if (item == null) return null;
+
+	    // 初始化新实例的quantity为0，确保它是一个新对象，不会影响到其他对象的状态
+	    item.quantity = 0;
+	    // 将新实例的等级设置为当前对象的等级，保持一致性或特定的测试条件
+	    item.level = level;
+	    // 返回新初始化的实例
+	    return item;
 	}
 	
 	public Item random() {
@@ -661,18 +790,31 @@ public class Item implements Bundlable {
 	private static final String QUICKSLOT		= "quickslotpos";
 	private static final String KEPT_LOST       = "kept_lost";
 	
+	/**
+	 * 将当前物品的状态存储到一个Bundle中。
+	 * 此方法用于在游戏保存或加载时，序列化物品的状态。
+	 * @param bundle 用于存储物品状态的Bundle对象。
+	 */
 	@Override
 	public void storeInBundle( Bundle bundle ) {
+		// 存储物品的数量。
 		bundle.put( QUANTITY, quantity );
+		// 存储物品的等级。
 		bundle.put( LEVEL, level );
+		// 存储是否已知物品的等级。
 		bundle.put( LEVEL_KNOWN, levelKnown );
+		// 存储物品是否被诅咒。
 		bundle.put( CURSED, cursed );
+		// 存储是否已知物品是否被诅咒。
 		bundle.put( CURSED_KNOWN, cursedKnown );
+		// 如果物品在快速槽中，存储其在快速槽中的位置。
 		if (Dungeon.quickslot.contains(this)) {
 			bundle.put( QUICKSLOT, Dungeon.quickslot.getSlot(this) );
 		}
+		// 存储物品是否在失去后仍被保留。
 		bundle.put( KEPT_LOST, keptThoughLostInvent );
 	}
+
 	
 	/**
 	 * 从保存的Bundle中恢复物品状态。

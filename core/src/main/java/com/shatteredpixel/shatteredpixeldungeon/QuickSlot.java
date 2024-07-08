@@ -31,129 +31,185 @@ import java.util.Collection;
 
 public class QuickSlot {
 
-	/**
-	 * Slots contain objects which are also in a player's inventory. The one exception to this is when quantity is 0,
-	 * which can happen for a stackable item that has been 'used up', these are referred to as placeholders.
-	 */
+    /**
+     * 插槽包含玩家背包中的物品。唯一的例外是数量为0的情况，
+     * 这可能发生在可堆叠物品被“用尽”的时候，这些被称为占位符。
+     */
 
-	//note that the current max size is coded at 6, due to UI constraints, but it could be much much bigger with no issue.
-	public static int SIZE = 6;
-	private Item[] slots = new Item[SIZE];
+    //注意当前的最大尺寸编码为6，由于用户界面的限制，但实际上可以设置得更大而没有问题。
+    public static final int SIZE = 6;
+    private Item[] slots = new Item[SIZE];
 
 
-	//direct array interaction methods, everything should build from these methods.
-	public void setSlot(int slot, Item item){
-		clearItem(item); //we don't want to allow the same item in multiple slots.
-		slots[slot] = item;
-	}
+    /**
+     * 设置指定插槽的物品。
+     * @param slot 插槽索引。
+     * @param item 要设置的物品。
+     */
+    public void setSlot(int slot, Item item){
+        clearItem(item); //不允许同一物品出现在多个插槽中。
+        slots[slot] = item;
+    }
 
-	public void clearSlot(int slot){
-		slots[slot] = null;
-	}
+    /**
+     * 清空指定插槽的物品。
+     * @param slot 要清空的插槽索引。
+     */
+    public void clearSlot(int slot){
+        slots[slot] = null;
+    }
 
-	public void reset(){
-		slots = new Item[SIZE];
-	}
+    /**
+     * 重置所有插槽为空。
+     */
+    public void reset(){
+        slots = new Item[SIZE];
+    }
 
-	public Item getItem(int slot){
-		return slots[slot];
-	}
+    /**
+     * 获取指定插槽的物品。
+     * @param slot 插槽索引。
+     * @return 返回该插槽的物品。
+     */
+    public Item getItem(int slot){
+        return slots[slot];
+    }
 
-	//utility methods, for easier use of the internal array.
-	public int getSlot(Item item) {
-		for (int i = 0; i < SIZE; i++) {
-			if (getItem(i) == item) {
-				return i;
-			}
-		}
-		return -1;
-	}
+    /**
+     * 查找指定物品所在的插槽。
+     * @param item 物品。
+     * @return 返回物品所在插槽的索引，如果未找到则返回-1。
+     */
+    public int getSlot(Item item) {
+        for (int i = 0; i < SIZE; i++) {
+            if (getItem(i) == item) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
-	public Boolean isPlaceholder(int slot){
-		return getItem(slot) != null && getItem(slot).quantity() == 0;
-	}
+    /**
+     * 判断指定插槽是否为占位符。
+     * @param slot 插槽索引。
+     * @return 如果插槽内有物品且其数量为0，则返回true。
+     */
+    public boolean isPlaceholder(int slot){
+        return getItem(slot) != null && getItem(slot).quantity() == 0;
+    }
 
-	public Boolean isNonePlaceholder(int slot){
-		return getItem(slot) != null && getItem(slot).quantity() > 0;
-	}
+    /**
+     * 判断指定插槽是否有非占位符的物品。
+     * @param slot 插槽索引。
+     * @return 如果插槽内有物品且其数量大于0，则返回true。
+     */
+    public boolean isNonePlaceholder(int slot){
+        return getItem(slot) != null && getItem(slot).quantity() > 0;
+    }
 
-	public void clearItem(Item item){
-		if (contains(item)) {
-			clearSlot(getSlot(item));
-		}
-	}
+    /**
+     * 清除指定物品在所有插槽中的存在。
+     * @param item 要清除的物品。
+     */
+    public void clearItem(Item item){
+        if (contains(item)) {
+            clearSlot(getSlot(item));
+        }
+    }
 
-	public boolean contains(Item item){
-		return getSlot(item) != -1;
-	}
+    /**
+     * 检查物品是否存在于任何插槽中。
+     * @param item 物品。
+     * @return 如果物品存在于任意插槽中，则返回true。
+     */
+    public boolean contains(Item item){
+        return getSlot(item) != -1;
+    }
 
-	public void replacePlaceholder(Item item) {
-		for (int i = 0; i < SIZE; i++) {
-			if (isPlaceholder(i) && item.isSimilar(getItem(i))) {
-				setSlot(i, item);
-			}
-		}
-	}
+    /**
+     * 替换指定插槽的占位符为新的物品。
+     * @param item 新的物品。
+     */
+    public void replacePlaceholder(Item item) {
+        for (int i = 0; i < SIZE; i++) {
+            if (isPlaceholder(i) && item.isSimilar(getItem(i))) {
+                setSlot(i, item);
+            }
+        }
+    }
 
-	public void convertToPlaceholder(Item item){
-		
-		if (contains(item)) {
-			Item placeholder = item.virtual();
-			if (placeholder == null) return;
-			
-			for (int i = 0; i < SIZE; i++) {
-				if (getItem(i) == item) setSlot(i, placeholder);
-			}
-		}
-	}
+    /**
+     * 将指定物品转换为占位符。
+     * @param item 要转换的物品。
+     */
+    public void convertToPlaceholder(Item item){
 
-	public Item randomNonePlaceholder(){
+        if (contains(item)) {
+            Item placeholder = item.virtual();
+            if (placeholder == null) return;
 
-		ArrayList<Item> result = new ArrayList<>();
-		for (int i = 0; i < SIZE; i ++) {
-			if (getItem(i) != null && !isPlaceholder(i)) {
-				result.add(getItem(i));
-			}
-		}
-		return Random.element(result);
-	}
+            for (int i = 0; i < SIZE; i++) {
+                if (getItem(i) == item) setSlot(i, placeholder);
+            }
+        }
+    }
 
-	private final String PLACEHOLDERS = "placeholders";
-	private final String PLACEMENTS = "placements";
+    /**
+     * 随机选择一个非占位符的物品。
+     * @return 返回随机选择的非占位符物品，如果没有则返回null。
+     */
+    public Item randomNonePlaceholder(){
 
-	/**
-	 * Placements array is used as order is preserved while bundling, but exact index is not, so if we
-	 * bundle both the placeholders (which preserves their order) and an array telling us where the placeholders are,
-	 * we can reconstruct them perfectly.
-	 */
+        ArrayList<Item> result = new ArrayList<>();
+        for (int i = 0; i < SIZE; i ++) {
+            if (getItem(i) != null && !isPlaceholder(i)) {
+                result.add(getItem(i));
+            }
+        }
+        return Random.element(result);
+    }
 
-	public void storePlaceholders(Bundle bundle){
-		ArrayList<Item> placeholders = new ArrayList<>(SIZE);
-		boolean[] placements = new boolean[SIZE];
+    //用于存储占位符的键名
+    private final String PLACEHOLDERS = "placeholders";
+    //用于存储占位符位置的键名
+    private final String PLACEMENTS = "placements";
 
-		for (int i = 0; i < SIZE; i++) {
-			if (isPlaceholder(i)) {
-				placeholders.add(getItem(i));
-				placements[i] = true;
-			}
-		}
-		bundle.put( PLACEHOLDERS, placeholders );
-		bundle.put( PLACEMENTS, placements );
-	}
+    /**
+     * 保存占位符和它们的位置信息到数据包中。
+     * @param bundle 数据包。
+     */
+    public void storePlaceholders(Bundle bundle){
+        ArrayList<Item> placeholders = new ArrayList<>(SIZE);
+        boolean[] placements = new boolean[SIZE];
 
-	public void restorePlaceholders(Bundle bundle){
-		Collection<Bundlable> placeholders = bundle.getCollection(PLACEHOLDERS);
-		boolean[] placements = bundle.getBooleanArray( PLACEMENTS );
+        for (int i = 0; i < SIZE; i++) {
+            if (isPlaceholder(i)) {
+                placeholders.add(getItem(i));
+                placements[i] = true;
+            }
+        }
+        bundle.put( PLACEHOLDERS, placeholders );
+        bundle.put( PLACEMENTS, placements );
+    }
 
-		int i = 0;
-		for (Bundlable item : placeholders){
-			while (!placements[i]){
-				i++;
-			}
-			setSlot( i, (Item)item );
-			i++;
-		}
+    /**
+     * 从数据包中恢复占位符和它们的位置信息。
+     * @param bundle 数据包。
+     */
+    public void restorePlaceholders(Bundle bundle){
+        Collection<Bundlable> placeholders = bundle.getCollection(PLACEHOLDERS);
+        boolean[] placements = bundle.getBooleanArray( PLACEMENTS );
 
-	}
+        int i = 0;
+        for (Bundlable item : placeholders){
+            while (!placements[i]){
+                i++;
+            }
+            setSlot( i, (Item)item );
+            i++;
+        }
+
+    }
 
 }
+

@@ -25,46 +25,113 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Signal;
 
+/**
+ * GLog类用于游戏日志记录，提供不同类型的日志输出方法。
+ * 它通过静态方法简化了日志记录的过程，并支持参数化日志消息。
+ */
 public class GLog {
 
-	public static final String TAG = "GAME";
-	
-	public static final String POSITIVE		= "++ ";
-	public static final String NEGATIVE		= "-- ";
-	public static final String WARNING		= "** ";
-	public static final String HIGHLIGHT	= "@@ ";
+    /**
+     * 日志标签，用于标识游戏日志。
+     */
+    public static final String TAG = "GAME";
 
-	public static final String NEW_LINE	    = "\n";
-	
-	public static Signal<String> update = new Signal<>();
+    /**
+     * 日志前缀，表示正面消息。
+     */
+    public static final String POSITIVE = "++ ";
+    /**
+     * 日志前缀，表示负面消息。
+     */
+    public static final String NEGATIVE = "-- ";
+    /**
+     * 日志前缀，表示警告消息。
+     */
+    public static final String WARNING = "** ";
+    /**
+     * 日志前缀，表示高亮消息。
+     */
+    public static final String HIGHLIGHT = "@@ ";
 
-	public static void newLine(){
-		update.dispatch( NEW_LINE );
-	}
-	
-	public static void i( String text, Object... args ) {
-		
-		if (args.length > 0) {
-			text = Messages.format( text, args );
-		}
-		
-		DeviceCompat.log( TAG, text );
-		update.dispatch( text );
-	}
-	
-	public static void p( String text, Object... args ) {
-		i( POSITIVE + text, args );
-	}
-	
-	public static void n( String text, Object... args ) {
-		i( NEGATIVE + text, args );
-	}
-	
-	public static void w( String text, Object... args ) {
-		i( WARNING + text, args );
-	}
-	
-	public static void h( String text, Object... args ) {
-		i( HIGHLIGHT + text, args );
-	}
+    /**
+     * 换行符，用于日志输出中的换行。
+     */
+    public static final String NEW_LINE = "\n";
+
+    /**
+     * 信号量，用于更新日志显示。
+     * 通过dispatch方法分发日志消息，可以在其他地方订阅此信号量以更新日志显示。
+     */
+    public static Signal<String> update = new Signal<>();
+
+    /**
+     * 输出普通日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void newLine(){
+        update.dispatch(NEW_LINE);
+    }
+
+    /**
+     * 输出普通日志。
+     * 如果提供了参数，则使用Messages.format方法格式化日志文本。
+     * 最终通过DeviceCompat.log方法输出日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void i( String text, Object... args ) {
+        if (args.length > 0) {
+            text = Messages.format( text, args );
+        }
+        DeviceCompat.log( TAG, text );
+        update.dispatch(text);
+    }
+
+    /**
+     * 输出正面消息日志。
+     * 在文本前添加POSITIVE前缀，然后调用i方法输出日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void p( String text, Object... args ) {
+        i(POSITIVE + text, args);
+    }
+
+    /**
+     * 输出负面消息日志。
+     * 在文本前添加NEGATIVE前缀，然后调用i方法输出日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void n( String text, Object... args ) {
+        i(NEGATIVE + text, args);
+    }
+
+    /**
+     * 输出警告消息日志。
+     * 在文本前添加WARNING前缀，然后调用i方法输出日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void w( String text, Object... args ) {
+        i(WARNING + text, args);
+    }
+
+    /**
+     * 输出高亮消息日志。
+     * 在文本前添加HIGHLIGHT前缀，然后调用i方法输出日志。
+     *
+     * @param text 日志文本，可以包含格式化占位符。
+     * @param args 格式化占位符的参数。
+     */
+    public static void h( String text, Object... args ) {
+        i(HIGHLIGHT + text, args);
+    }
 }
+

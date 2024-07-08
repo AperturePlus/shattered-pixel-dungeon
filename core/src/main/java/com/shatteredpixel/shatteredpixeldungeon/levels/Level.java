@@ -161,7 +161,8 @@ public abstract class Level implements Bundlable {
 
 	//when a boss level has become locked.
 	public boolean locked = false;
-	
+
+
 	public HashSet<Mob> mobs;
 	public SparseArray<Heap> heaps;
 	public HashMap<Class<? extends Blob>,Blob> blobs;

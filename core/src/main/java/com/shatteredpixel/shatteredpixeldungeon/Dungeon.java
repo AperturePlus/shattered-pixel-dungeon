@@ -97,8 +97,10 @@ import java.util.TimeZone;
 
 public class Dungeon {
 
-	//enum of items which have limited spawns, records how many have spawned
-	//could all be their own separate numbers, but this allows iterating, much nicer for bundling/initializing.
+	/**
+	 * 有限掉落物品枚举，用于记录游戏中具有限定数量的物品掉落情况。
+	 * 每个枚举常量代表一种特定的物品，这种设计便于管理和追踪这些有限物品的生成次数和状态。
+	 */
 	public static enum LimitedDrops {
 		//limited world drops
 		STRENGTH_POTIONS,
@@ -145,43 +147,83 @@ public class Dungeon {
 
 		public int count = 0;
 
-		//for items which can only be dropped once, should directly access count otherwise.
-		public boolean dropped(){
-			return count != 0;
-		}
+		/**
+ * 判断物品是否已被丢弃。
+ *
+ * 此方法用于确定物品是否被丢弃过，即物品的数量是否不是零。
+ * 它并不直接暴露具体的数量值，而是仅提供布尔结果来指示物品的状态，
+ * 这在一定程度上保护了数据的隐私性。
+ *
+ * @return boolean - 如果物品已被丢弃（数量不为0），则返回true；否则，返回false。
+ */
+	public boolean dropped(){
+    // 检查物品是否被丢弃，通过判断数量是否不为0
+    	return count != 0;
+	}
+
 		public void drop(){
 			count = 1;
 		}
 
+		/**
+		 * 重置所有限定掉落物的计数器。
+		 * 该方法遍历所有的LimitedDrops枚举实例，并将它们的计数器重置为0。
+		 * 这样做是为了确保每个掉落物在下一次掉落前都有一个公平的起始状态。
+		 * 该方法设计为静态方法，可以通过类名直接调用，而不需要实例化对象。
+		 */
 		public static void reset(){
-			for (LimitedDrops lim : values()){
-				lim.count = 0;
-			}
+		    // 遍历所有的LimitedDrops枚举值
+		    for (LimitedDrops lim : values()){
+		        // 重置计数器
+		        lim.count = 0;
+		    }
 		}
 
+		/**
+		 * 将LimitedDrops枚举中的所有条目存储到Bundle中。
+		 * 此方法遍历LimitedDrops枚举的所有值，并将每个值的名称和计数存储到提供的Bundle中。
+		 * 这样做的目的是为了在不同场景间传递和恢复特定于枚举的配置或状态。
+		 *
+		 * @param bundle 用于存储LimitedDrops枚举值名称和计数的Bundle对象。
+		 */
 		public static void store( Bundle bundle ){
-			for (LimitedDrops lim : values()){
-				bundle.put(lim.name(), lim.count);
-			}
+		    // 遍历LimitedDrops枚举的所有值
+		    for (LimitedDrops lim : values()){
+		        // 将枚举值的名称作为键，计数作为值存储到Bundle中
+		        bundle.put(lim.name(), lim.count);
+		    }
 		}
 
-		public static void restore( Bundle bundle ){
-			for (LimitedDrops lim : values()){
-				if (bundle.contains(lim.name())){
-					lim.count = bundle.getInt(lim.name());
-				} else {
-					lim.count = 0;
-				}
-				
-			}
+		/**
+		 * 从给定的Bundle中恢复LimitedDrops枚举中每个项目的计数。
+		 * 此方法用于在游戏的保存和加载过程中处理特定物品的限制掉落次数。
+		 * 它首先检查Bundle中是否包含特定于每个LimitedDrops枚举值的键，
+		 * 如果存在，则从Bundle中恢复计数；如果不存在，则将计数重置为0。
+		 * 此外，对于旧版本的游戏存档，在特定条件下调整升级卷轴的计数，
+		 * 以适应游戏机制的更新。
+		 *
+		 * @param bundle 用于恢复LimitedDrops枚举值计数的Bundle对象。
+		 */
+		public static void restore(Bundle bundle) {
+		    // 遍历LimitedDrops枚举中的每个项目
+		    for (LimitedDrops lim : values()) {
+		        // 检查bundle中是否包含当前项目的名字
+		        if (bundle.contains(lim.name())) {
+		            // 如果包含，从bundle中获取计数并赋值给当前项目
+		            lim.count = bundle.getInt(lim.name());
+		        } else {
+		            // 如果不包含，将计数重置为0
+		            lim.count = 0;
+		        }
+		    }
 
-			//pre-v2.2.0 saves
-		if (Dungeon.version < 750
-					&& Dungeon.isChallenged(Challenges.NO_SCROLLS)
-					&& UPGRADE_SCROLLS.count > 0){
-				//we now count SOU fully, and just don't drop every 2nd one
-				UPGRADE_SCROLLS.count += UPGRADE_SCROLLS.count-1;
-			}
+		    // 仅在游戏版本低于v2.2.0且挑战了无卷轴挑战的情况下处理升级卷轴的特殊逻辑
+		    //pre-v2.2.0 saves
+		    if (Dungeon.version < 750 && Dungeon.isChallenged(Challenges.NO_SCROLLS) && UPGRADE_SCROLLS.count > 0) {
+		        // 在保持总数不变的情况下，调整升级卷轴的可见计数，每两个只显示一个
+		        // 这里的逻辑是将count增加自身值减1，实际上实现了显示计数的调整
+		        UPGRADE_SCROLLS.count += UPGRADE_SCROLLS.count - 1;
+		    }
 		}
 
 	}

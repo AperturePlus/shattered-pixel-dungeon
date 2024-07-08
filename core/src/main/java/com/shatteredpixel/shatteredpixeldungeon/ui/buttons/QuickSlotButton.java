@@ -208,7 +208,7 @@ public class QuickSlotButton extends Button {
 
 	@Override
 	protected String hoverText() {
-		if (slot.item == null){
+		if (slot.getItem() == null){
 			return Messages.titleCase(Messages.get(WndKeyBindings.class, "quickslot_" + (slotNum+1)));
 		} else {
 			return super.hoverText();
@@ -331,7 +331,7 @@ public class QuickSlotButton extends Button {
 				crossM.point(sprite.center(crossM));
 			}
 
-			crossB.point(slot.sprite.center(crossB));
+			crossB.point(slot.sprite().center(crossB));
 			crossB.visible = true;
 
 		} else {

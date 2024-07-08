@@ -45,9 +45,20 @@ public class Button extends Component {
 	protected float pressTime;
 	protected boolean clickReady;
 
+	/**
+	 * 创建按钮的子元素，主要包括热区和键盘监听器。
+	 * 热区用于处理鼠标事件，如按下、释放和点击，以及悬停开始和结束。
+	 * 键盘监听器用于处理与按钮关联的键盘事件。
+	 */
 	@Override
 	protected void createChildren() {
+		// 创建一个热区，用于识别按钮区域内的鼠标事件。
 		hotArea = new PointerArea( 0, 0, 0, 0 ) {
+			/**
+			 * 当鼠标按下时触发。
+			 * 设置当前按下的按钮为this按钮，重置按压时间和准备点击状态。
+			 * 调用Button.this的onPointerDown方法，传递鼠标事件。
+			 */
 			@Override
 			protected void onPointerDown( PointerEvent event ) {
 				pressedButton = Button.this;
@@ -55,6 +66,12 @@ public class Button extends Component {
 				clickReady = true;
 				Button.this.onPointerDown();
 			}
+			/**
+			 * 当鼠标释放时触发。
+			 * 如果释放时的按钮与按下时的按钮相同，则重置按下的按钮状态。
+			 * 否则，取消可能的点击动作。
+			 * 调用Button.this的onPointerUp方法，传递鼠标事件。
+			 */
 			@Override
 			protected void onPointerUp( PointerEvent event ) {
 				if (pressedButton == Button.this){
@@ -65,6 +82,11 @@ public class Button extends Component {
 				}
 				Button.this.onPointerUp();
 			}
+			/**
+			 * 当鼠标点击时触发。
+			 * 如果准备点击状态为true，则根据点击的鼠标按钮执行相应的点击动作。
+			 * 包括常规点击、右键点击和中键点击。
+			 */
 			@Override
 			protected void onClick( PointerEvent event ) {
 				if (clickReady) {
@@ -84,6 +106,10 @@ public class Button extends Component {
 				}
 			}
 
+			/**
+			 * 当鼠标悬停开始时触发。
+			 * 根据按钮的hoverText和关联的键盘绑定，生成并显示工具提示。
+			 */
 			@Override
 			protected void onHoverStart(PointerEvent event) {
 				String text = hoverText();
@@ -106,15 +132,24 @@ public class Button extends Component {
 					alignTooltip(hoverTip);
 				}
 			}
-
+			/**
+			 * 当鼠标悬停结束时触发。
+			 * 销毁当前的工具提示。
+			 */
 			@Override
 			protected void onHoverEnd(PointerEvent event) {
 				killTooltip();
 			}
 		};
 		add( hotArea );
-		
+
+		// 添加键盘监听器，用于处理与按钮关联的键盘事件。
 		KeyEvent.addKeyListener( keyListener = new Signal.Listener<KeyEvent>() {
+			/**
+			 * 当键盘事件触发时检查是否与按钮相关联。
+			 * 如果按钮处于激活状态，且事件对应的键盘动作与按钮的动作匹配，
+			 * 则根据键盘事件的状态执行按下或释放操作，并可能触发点击动作。
+			 */
 			@Override
 			public boolean onSignal ( KeyEvent event ) {
 				if ( active && KeyBindings.getActionForKey( event ) == keyAction()){
@@ -136,6 +171,7 @@ public class Button extends Component {
 			}
 		});
 	}
+
 	
 	private Signal.Listener<KeyEvent> keyListener;
 	

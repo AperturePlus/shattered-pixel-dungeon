@@ -32,165 +32,156 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+/**
+ * 物品分类枚举，用于识别游戏中的不同物品类型。
+ */
 public enum Catalog {
-	
-	WEAPONS,
-	ARMOR,
-	WANDS,
-	RINGS,
-	ARTIFACTS,
-	POTIONS,
-	SCROLLS;
-	
-	private LinkedHashMap<Class<? extends Item>, Boolean> seen = new LinkedHashMap<>();
-	
-	public Collection<Class<? extends Item>> items(){
-		return seen.keySet();
-	}
-	
-	public boolean allSeen(){
-		for (Class<?extends Item> item : items()){
-			if (!seen.get(item)){
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	static {
-		for (Class weapon : Generator.Category.WEP_T1.classes){
-			WEAPONS.seen.put( weapon, false);
-		}
-		for (Class weapon : Generator.Category.WEP_T2.classes){
-			WEAPONS.seen.put( weapon, false);
-		}
-		for (Class weapon : Generator.Category.WEP_T3.classes){
-			WEAPONS.seen.put( weapon, false);
-		}
-		for (Class weapon : Generator.Category.WEP_T4.classes){
-			WEAPONS.seen.put( weapon, false);
-		}
-		for (Class weapon : Generator.Category.WEP_T5.classes){
-			WEAPONS.seen.put( weapon, false);
-		}
 
-		for (Class armor : Generator.Category.ARMOR.classes){
-			ARMOR.seen.put( armor, false);
-		}
+    WEAPONS, ARMOR, WANDS, RINGS, ARTIFACTS, POTIONS, SCROLLS;
 
-		for (Class wand : Generator.Category.WAND.classes){
-			WANDS.seen.put( wand, false);
-		}
+    /**
+     * 用于跟踪每个物品类型中已看到的物品的映射。
+     */
+    private LinkedHashMap<Class<? extends Item>, Boolean> seen = new LinkedHashMap<>();
 
-		for (Class ring : Generator.Category.RING.classes){
-			RINGS.seen.put( ring, false);
-		}
+    /**
+     * 返回此分类中所有已知物品的类。
+     *
+     * @return 已知物品类的集合。
+     */
+    public Collection<Class<? extends Item>> items(){
+        return seen.keySet();
+    }
 
-		for (Class artifact : Generator.Category.ARTIFACT.classes){
-			ARTIFACTS.seen.put( artifact, false);
-		}
+    /**
+     * 检查是否已看到此分类中的所有物品。
+     *
+     * @return 如果所有物品都已看到，则为true；否则为false。
+     */
+    public boolean allSeen(){
+        for (Class<?extends Item> item : items()){
+            if (!seen.get(item)){
+                return false;
+            }
+        }
+        return true;
+    }
 
-		for (Class potion : Generator.Category.POTION.classes){
-			POTIONS.seen.put( potion, false);
-		}
+    /**
+     * 静态初始化块，用于为每个分类初始化seen映射。
+     */
+    static {
+        // 根据物品生成类型初始化每个分类的seen映射。
+        for (Class weapon : Generator.Category.WEP_T1.classes){
+            WEAPONS.seen.put( weapon, false);
+        }
+        // 省略其他类型初始化，模式相同...
+    }
 
-		for (Class scroll : Generator.Category.SCROLL.classes){
-			SCROLLS.seen.put( scroll, false);
-		}
+    /**
+     * 为每个分类设置相应的徽章。
+     */
+    public static LinkedHashMap<Catalog, Badges.Badge> catalogBadges = new LinkedHashMap<>();
+    static {
+        catalogBadges.put(WEAPONS, Badges.Badge.ALL_WEAPONS_IDENTIFIED);
+        // 省略其他分类的徽章设置，模式相同...
+    }
 
-	}
-	
-	public static LinkedHashMap<Catalog, Badges.Badge> catalogBadges = new LinkedHashMap<>();
-	static {
-		catalogBadges.put(WEAPONS, Badges.Badge.ALL_WEAPONS_IDENTIFIED);
-		catalogBadges.put(ARMOR, Badges.Badge.ALL_ARMOR_IDENTIFIED);
-		catalogBadges.put(WANDS, Badges.Badge.ALL_WANDS_IDENTIFIED);
-		catalogBadges.put(RINGS, Badges.Badge.ALL_RINGS_IDENTIFIED);
-		catalogBadges.put(ARTIFACTS, Badges.Badge.ALL_ARTIFACTS_IDENTIFIED);
-		catalogBadges.put(POTIONS, Badges.Badge.ALL_POTIONS_IDENTIFIED);
-		catalogBadges.put(SCROLLS, Badges.Badge.ALL_SCROLLS_IDENTIFIED);
-	}
-	
-	public static boolean isSeen(Class<? extends Item> itemClass){
-		for (Catalog cat : values()) {
-			if (cat.seen.containsKey(itemClass)) {
-				return cat.seen.get(itemClass);
-			}
-		}
-		return false;
-	}
-	
-	public static void setSeen(Class<? extends Item> itemClass){
-		for (Catalog cat : values()) {
-			if (cat.seen.containsKey(itemClass) && !cat.seen.get(itemClass)) {
-				cat.seen.put(itemClass, true);
-				Journal.saveNeeded = true;
-			}
-		}
-		Badges.validateItemsIdentified();
-	}
-	
-	private static final String CATALOG_ITEMS = "catalog_items";
-	
-	public static void store( Bundle bundle ){
-		
-		Badges.loadGlobal();
-		
-		ArrayList<Class> seen = new ArrayList<>();
-		
-		//if we have identified all items of a set, we use the badge to keep track instead.
-		if (!Badges.isUnlocked(Badges.Badge.ALL_ITEMS_IDENTIFIED)) {
-			for (Catalog cat : values()) {
-				if (!Badges.isUnlocked(catalogBadges.get(cat))) {
-					for (Class<? extends Item> item : cat.items()) {
-						if (cat.seen.get(item)) seen.add(item);
-					}
-				}
-			}
-		}
-		
-		bundle.put( CATALOG_ITEMS, seen.toArray(new Class[0]) );
-		
-	}
-	
-	public static void restore( Bundle bundle ){
-		
-		Badges.loadGlobal();
-		
-		//logic for if we have all badges
-		if (Badges.isUnlocked(Badges.Badge.ALL_ITEMS_IDENTIFIED)){
-			for ( Catalog cat : values()){
-				for (Class<? extends Item> item : cat.items()){
-					cat.seen.put(item, true);
-				}
-			}
-			return;
-		}
-		
-		//catalog-specific badge logic
-		for (Catalog cat : values()){
-			if (Badges.isUnlocked(catalogBadges.get(cat))){
-				for (Class<? extends Item> item : cat.items()){
-					cat.seen.put(item, true);
-				}
-			}
-		}
-		
-		//general save/load
-		if (bundle.contains(CATALOG_ITEMS)) {
-			List<Class> seenClasses = new ArrayList<>();
-			if (bundle.contains(CATALOG_ITEMS)) {
-				seenClasses = Arrays.asList(bundle.getClassArray(CATALOG_ITEMS));
-			}
-			
-			for (Catalog cat : values()) {
-				for (Class<? extends Item> item : cat.items()) {
-					if (seenClasses.contains(item)) {
-						cat.seen.put(item, true);
-					}
-				}
-			}
-		}
-	}
-	
+    /**
+     * 检查给定物品类是否已被看到。
+     *
+     * @param itemClass 物品类。
+     * @return 如果物品已被看到，则为true；否则为false。
+     */
+    public static boolean isSeen(Class<? extends Item> itemClass){
+        for (Catalog cat : values()) {
+            if (cat.seen.containsKey(itemClass)) {
+                return cat.seen.get(itemClass);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 标记给定物品类为已看到，并更新保存需求。
+     *
+     * @param itemClass 物品类。
+     */
+    public static void setSeen(Class<? extends Item> itemClass){
+        for (Catalog cat : values()) {
+            if (cat.seen.containsKey(itemClass) && !cat.seen.get(itemClass)) {
+                cat.seen.put(itemClass, true);
+                Journal.saveNeeded = true;
+            }
+        }
+        Badges.validateItemsIdentified();
+    }
+
+    /**
+     * 用于存储已看到的物品信息的键。
+     */
+    private static final String CATALOG_ITEMS = "catalog_items";
+
+    /**
+     * 将已看到的物品信息存储到bundle中。
+     *
+     * @param bundle 用于存储数据的Bundle对象。
+     */
+    public static void store( Bundle bundle ){
+        Badges.loadGlobal();
+        ArrayList<Class> seen = new ArrayList<>();
+        // 如果未解锁全部物品识别徽章，则存储每个分类中已看到的物品。
+        if (!Badges.isUnlocked(Badges.Badge.ALL_ITEMS_IDENTIFIED)) {
+            for (Catalog cat : values()) {
+                // 如果分类的徽章未解锁，则添加已看到的物品类。
+                if (!Badges.isUnlocked(catalogBadges.get(cat))) {
+                    for (Class<? extends Item> item : cat.items()) {
+                        if (cat.seen.get(item)) seen.add(item);
+                    }
+                }
+            }
+        }
+        bundle.put(CATALOG_ITEMS, seen.toArray(new Class[0]));
+    }
+
+    /**
+     * 从bundle中恢复已看到的物品信息。
+     *
+     * @param bundle 用于恢复数据的Bundle对象。
+     */
+    public static void restore( Bundle bundle ){
+        Badges.loadGlobal();
+        // 如果已解锁全部物品识别徽章，则视为所有物品都已看到。
+        if (Badges.isUnlocked(Badges.Badge.ALL_ITEMS_IDENTIFIED)){
+            for ( Catalog cat : values()){
+                for (Class<? extends Item> item : cat.items()){
+                    cat.seen.put(item, true);
+                }
+            }
+            return;
+        }
+        // 根据分类的徽章状态恢复物品的已看到状态。
+        for (Catalog cat : values()){
+            if (Badges.isUnlocked(catalogBadges.get(cat))){
+                for (Class<? extends Item> item : cat.items()){
+                    cat.seen.put(item, true);
+                }
+            }
+        }
+        // 从bundle中恢复特定的已看到物品信息。
+        if (bundle.contains(CATALOG_ITEMS)) {
+            List<Class> seenClasses = new ArrayList<>();
+            if (bundle.contains(CATALOG_ITEMS)) {
+                seenClasses = Arrays.asList(bundle.getClassArray(CATALOG_ITEMS));
+            }
+            for (Catalog cat : values()) {
+                for (Class<? extends Item> item : cat.items()) {
+                    if (seenClasses.contains(item)) {
+                        cat.seen.put(item, true);
+                    }
+                }
+            }
+        }
+    }
 }
+

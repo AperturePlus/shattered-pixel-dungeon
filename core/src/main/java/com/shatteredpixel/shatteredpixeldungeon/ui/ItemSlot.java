@@ -123,6 +123,9 @@ public class ItemSlot extends Button {
 		level = new BitmapText( PixelScene.pixelFont);
 		add(level);
 	}
+    public ItemSprite sprite() {
+        return sprite;
+    }
 	
 	@Override
 	protected void layout() {

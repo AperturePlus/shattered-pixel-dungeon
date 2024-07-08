@@ -28,69 +28,79 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 
-public class DesktopLaunchValidator {
+public class public class DesktopLaunchValidator {
 
-	//Validates that the launching JVM is correctly configured
-	// and attempts to launch a new one if it is not
-	// returns false if current JVM is invalid and should be killed.
-	public static boolean verifyValidJVMState(String[] args){
+    /**
+     * 验证启动的JVM是否正确配置，并尝试重新启动一个新的JVM如果当前的不满足条件。
+     * 如果当前JVM无效应被终止，则返回false。
+     *
+     * @param args 启动时传入的命令行参数
+     * @return 如果JVM有效或已成功重新启动则返回true，否则返回false
+     */
+    public static boolean verifyValidJVMState(String[] args) {
 
-		//mac computers require the -XstartOnFirstThread JVM argument
-		if (SharedLibraryLoader.isMac){
+        // Mac电脑需要-XstartOnFirstThread的JVM参数
+        if (SharedLibraryLoader.isMac) {
 
-			// If XstartOnFirstThread is present and enabled, we can return true
-			if ("1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_" +
-					ManagementFactory.getRuntimeMXBean().getName().split("@")[0]))) {
-				return true;
-			}
+            // 如果-XstartOnFirstThread存在并且启用，我们可以直接返回true
+            String threadStartEnvVar = System.getenv("JAVA_STARTED_ON_FIRST_THREAD_" +
+                    ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
+            if ("1".equals(threadStartEnvVar)) {
+                return true;
+            }
 
-			// Check if we are the relaunched process, if so return true to avoid looping.
-			// The game will likely crash, but that's unavoidable at this point.
-			if ("true".equals(System.getProperty("shpdRelaunched"))){
-				System.err.println("Error: Could not verify new process is running on the first thread. Trying to run the game anyway...");
-				return true;
-			}
+            // 检查是否已经是重新启动后的进程，如果是则返回true以避免循环重启。
+            // 游戏可能仍然会崩溃，但这点无法避免。
+            if ("true".equals(System.getProperty("shpdRelaunched"))) {
+                System.err.println("Error: could not verify the new process running on the first thread. Try run the game anyway. " +
+									"错误: 无法验证新进程是在第一条线程上运行。尝试无论如何运行游戏...");
+                return true;
+            }
 
-			// Relaunch a new jvm process with the same arguments, plus -XstartOnFirstThread
-			String sep = System.getProperty("file.separator");
+            // 重新启动一个带有-XstartOnFirstThread参数的新JVM进程
+            String sep = System.getProperty("file.separator");
 
-			ArrayList<String> jvmArgs = new ArrayList<>();
-			jvmArgs.add(System.getProperty("java.home") + sep + "bin" + sep + "java");
-			jvmArgs.add("-XstartOnFirstThread");
-			jvmArgs.add("-DshpdRelaunched=true");
-			jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
-			jvmArgs.add("-cp");
-			jvmArgs.add(System.getProperty("java.class.path"));
-			jvmArgs.add(DesktopLauncher.class.getName());
+            ArrayList<String> jvmArgs = new ArrayList<>();
+            jvmArgs.add(System.getProperty("java.home") + sep + "bin" + sep + "java");
+            jvmArgs.add("-XstartOnFirstThread");
+            jvmArgs.add("-DshpdRelaunched=true");
+            jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
+            jvmArgs.add("-cp");
+            jvmArgs.add(System.getProperty("java.class.path"));
+            jvmArgs.add(DesktopLauncher.class.getName());
 
-			System.err.println("Error: ShatteredPD must start on the first thread in order to work on macOS.");
-			System.err.println("  To avoid this error, run the game with the \"-XstartOnFirstThread\" argument");
-			System.err.println("  Now attempting to relaunch the game on the first thread automatically:\n");
+            System.err.println("Error: ShatteredPD must run on the first thread so as to work on MacOS." +"\n"+
+					"			错误: ShatteredPD 必须在第一条线程上启动才能在macOS上运行。");
+            System.err.println("To avoid this error, use \"-XstartOnFirstThread\" arg to run the game." +"\n"+
+								"为了避免这个错误，请使用\"-XstartOnFirstThread\"参数运行游戏");
+            System.err.println("Now attempting automatically relaunch the game on the first thread.\n" +
+								"现在尝试自动重新启动游戏在第一条线程上:\n");
 
-			try {
-				Process process = new ProcessBuilder(jvmArgs).redirectErrorStream(true).start();
-				BufferedReader out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				String line;
+            try {
+                Process process = new ProcessBuilder(jvmArgs).redirectErrorStream(true).start();
+                BufferedReader out = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
 
-				//Relay console output from the relaunched process
-				while ((line = out.readLine()) != null) {
-					if (line.toLowerCase().startsWith("error")){
-						System.err.println(line);
-					} else {
-						System.out.println(line);
-					}
-				}
+                // 从重新启动的进程中转发控制台输出
+                while ((line = out.readLine()) != null) {
+                    if (line.toLowerCase().startsWith("error")) {
+                        System.err.println(line);
+                    } else {
+                        System.out.println(line);
+                    }
+                }
 
-				process.waitFor();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+                process.waitFor();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-			return false;
+            return false;
 
-		}
+        }
 
-		return true;
-	}
+        // 如果不是Mac系统，直接返回true
+        return true;
+    }
 
 }

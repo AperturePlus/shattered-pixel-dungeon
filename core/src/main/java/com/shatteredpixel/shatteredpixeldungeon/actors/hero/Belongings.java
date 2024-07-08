@@ -465,124 +465,197 @@ public class Belongings implements Iterable<Item> {
 		}
 	}
 	
+	/**
+	 * 观察并识别玩家拥有的所有物品。
+	 * 该方法遍历并处理玩家的所有装备和背包中的物品，识别它们并验证是否获得了相应的成就徽章。
+	 * 对于可装备的物品和魔杖，标记它们为已知的被诅咒物品。
+	 * 最后，更新物品的快速槽。
+	 */
 	public void observe() {
-		if (weapon() != null) {
-			weapon().identify();
-			Badges.validateItemLevelAquired(weapon());
-		}
-		if (armor() != null) {
-			armor().identify();
-			Badges.validateItemLevelAquired(armor());
-		}
-		if (artifact() != null) {
-			artifact().identify();
-			Badges.validateItemLevelAquired(artifact());
-		}
-		if (misc() != null) {
-			misc().identify();
-			Badges.validateItemLevelAquired(misc());
-		}
-		if (ring() != null) {
-			ring().identify();
-			Badges.validateItemLevelAquired(ring());
-		}
-		if (secondWep() != null){
-			secondWep().identify();
-			Badges.validateItemLevelAquired(secondWep());
-		}
-		for (Item item : backpack) {
-			if (item instanceof EquipableItem || item instanceof Wand) {
-				item.cursedKnown = true;
-			}
-		}
-		Item.updateQuickslot();
+	    // 识别并验证武器是否达到获得成就的条件
+	    if (weapon() != null) {
+	        weapon().identify();
+	        Badges.validateItemLevelAquired(weapon());
+	    }
+	    // 识别并验证护甲是否达到获得成就的条件
+	    if (armor() != null) {
+	        armor().identify();
+	        Badges.validateItemLevelAquired(armor());
+	    }
+	    // 识别并验证神器是否达到获得成就的条件
+	    if (artifact() != null) {
+	        artifact().identify();
+	        Badges.validateItemLevelAquired(artifact());
+	    }
+	    // 识别并验证杂项物品是否达到获得成就的条件
+	    if (misc() != null) {
+	        misc().identify();
+	        Badges.validateItemLevelAquired(misc());
+	    }
+	    // 识别并验证戒指是否达到获得成就的条件
+	    if (ring() != null) {
+	        ring().identify();
+	        Badges.validateItemLevelAquired(ring());
+	    }
+	    // 识别并验证第二把武器是否达到获得成就的条件
+	    if (secondWep() != null){
+	        secondWep().identify();
+	        Badges.validateItemLevelAquired(secondWep());
+	    }
+	    // 标记背包中的可装备物品和魔杖为已知的被诅咒物品
+	    for (Item item : backpack) {
+	        if (item instanceof EquipableItem || item instanceof Wand) {
+	            item.cursedKnown = true;
+	        }
+	    }
+	    // 更新物品的快速槽
+	    Item.updateQuickslot();
 	}
 	
+	/**
+	 * 取消装备上的诅咒。
+	 * 该方法用于解除当前角色装备上所有物品的诅咒状态。通过调用ScrollOfRemoveCurse类的uncurse方法，
+	 * 对角色的各个装备位置进行诅咒状态的清除操作。
+	 *
+	 * @see ScrollOfRemoveCurse#uncurse(Entity, Equipment...)
+	 * @see Equipment#uncurse(Equipment...)
+	 */
 	public void uncurseEquipped() {
-		ScrollOfRemoveCurse.uncurse( owner, armor(), weapon(), artifact(), misc(), ring(), secondWep());
+	    ScrollOfRemoveCurse.uncurse(owner, armor(), weapon(), artifact(), misc(), ring(), secondWep());
 	}
 	
+	/**
+	 * 随机选择一个未装备的物品。
+	 *
+	 * 此方法用于在特定条件下，从角色的背包中随机选择一个未装备的物品。
+	 * 如果角色带有LostInventory buff，表示背包中的物品不应被随机选择，此时方法将返回null。
+	 *
+	 * @return 返回随机选择的未装备物品，如果条件不满足则返回null。
+	 */
 	public Item randomUnequipped() {
-		if (owner.buff(LostInventory.class) != null) return null;
+	    // 检查角色是否带有LostInventory buff，如果带有，则不进行随机选择，直接返回null。
+	    if (owner.buff(LostInventory.class) != null) return null;
 
-		return Random.element( backpack.items );
+	    // 从背包中的物品列表中随机选择一个物品并返回。
+	    return Random.element( backpack.items );
 	}
 	
-	public int charge( float charge ) {
-		
-		int count = 0;
-		
-		for (Wand.Charger charger : owner.buffs(Wand.Charger.class)){
-			charger.gainCharge(charge);
-			count++;
-		}
-		
-		return count;
+	/**
+	 * 为所有附着在魔杖上的充电器充能。
+	 *
+	 * 此方法遍历主人身上的所有充电器 buff，并为每个充电器添加指定的充能值。
+	 * 充电器可能是通过魔法或其他方式附加到魔杖上的，它们的作用是增加魔杖的充能次数或能力。
+	 *
+	 * @param charge 要添加到每个充电器的充能值，以浮点数表示。
+	 * @return 返回成功充能的充电器数量。
+	 */
+	public int charge(float charge) {
+	    // 初始化成功充能的充电器数量为0
+	    int count = 0;
+
+	    // 遍历主人身上的所有Wand.Charger类型的buff
+	    for (Wand.Charger charger : owner.buffs(Wand.Charger.class)) {
+	        // 为每个充电器添加充能
+	        charger.gainCharge(charge);
+	        // 充能成功计数加1
+	        count++;
+	    }
+
+	    // 返回成功充能的充电器数量
+	    return count;
 	}
 
+	/**
+	 * 实现Iterator<Item>接口，以支持对Item类型的集合进行迭代遍历。
+	 * 这里的迭代器专门用于遍历Item类型的集合，提供了标准的next()和hasNext()方法来逐个访问集合中的元素。
+	 */
 	@Override
 	public Iterator<Item> iterator() {
-		return new ItemIterator();
+	    // 创建并返回一个新的ItemIterator实例，用于迭代遍历Item集合
+	    return new ItemIterator();
 	}
 	
+	/**
+	 * 内部类ItemIterator实现了Iterator<Item>接口，用于遍历玩家背包中的物品。
+	 * 它可以遍历已装备的物品和背包中的未装备物品。
+	 */
 	private class ItemIterator implements Iterator<Item> {
 
-		private int index = 0;
-		
-		private Iterator<Item> backpackIterator = backpack.iterator();
-		
-		private Item[] equipped = {weapon, armor, artifact, misc, ring, secondWep};
-		private int backpackIndex = equipped.length;
-		
-		@Override
-		public boolean hasNext() {
-			
-			for (int i=index; i < backpackIndex; i++) {
-				if (equipped[i] != null) {
-					return true;
-				}
-			}
-			
-			return backpackIterator.hasNext();
-		}
+	    private int index = 0;
 
-		@Override
-		public Item next() {
-			
-			while (index < backpackIndex) {
-				Item item = equipped[index++];
-				if (item != null) {
-					return item;
-				}
-			}
-			
-			return backpackIterator.next();
-		}
+	    /**
+	     * 背包的迭代器，用于遍历背包中未装备的物品。
+	     */
+	    private Iterator<Item> backpackIterator = backpack.iterator();
 
-		@Override
-		public void remove() {
-			switch (index) {
-			case 0:
-				equipped[0] = weapon = null;
-				break;
-			case 1:
-				equipped[1] = armor = null;
-				break;
-			case 2:
-				equipped[2] = artifact = null;
-				break;
-			case 3:
-				equipped[3] = misc = null;
-				break;
-			case 4:
-				equipped[4] = ring = null;
-				break;
-			case 5:
-				equipped[5] = secondWep = null;
-				break;
-			default:
-				backpackIterator.remove();
-			}
-		}
+	    /**
+	     * 已装备的物品数组，包括武器、护甲、神器、杂项、戒指和副武器。
+	     */
+	    private Item[] equipped = {weapon, armor, artifact, misc, ring, secondWep};
+	    private int backpackIndex = equipped.length;
+
+	    /**
+	     * 检查是否还有下一个物品。
+	     * 首先检查已装备的物品，如果没有则检查背包中的物品。
+	     *
+	     * @return 如果还有下一个物品，则返回true；否则返回false。
+	     */
+	    @Override
+	    public boolean hasNext() {
+	        for (int i = index; i < backpackIndex; i++) {
+	            if (equipped[i] != null) {
+	                return true;
+	            }
+	        }
+	        return backpackIterator.hasNext();
+	    }
+
+	    /**
+	     * 获取下一个物品。
+	     * 首先尝试获取已装备的物品，如果没有则获取背包中的物品。
+	     *
+	     * @return 下一个物品。
+	     */
+	    @Override
+	    public Item next() {
+	        while (index < backpackIndex) {
+	            Item item = equipped[index++];
+	            if (item != null) {
+	                return item;
+	            }
+	        }
+	        return backpackIterator.next();
+	    }
+
+	    /**
+	     * 移除当前物品。
+	     * 如果当前物品是已装备的物品，则将其设为null，相当于卸载该物品。
+	     * 如果当前物品是背包中的物品，则调用backpackIterator的remove方法移除。
+	     */
+	    @Override
+	    public void remove() {
+	        switch (index) {
+	            case 0:
+	                equipped[0] = weapon = null;
+	                break;
+	            case 1:
+	                equipped[1] = armor = null;
+	                break;
+	            case 2:
+	                equipped[2] = artifact = null;
+	                break;
+	            case 3:
+	                equipped[3] = misc = null;
+	                break;
+	            case 4:
+	                equipped[4] = ring = null;
+	                break;
+	            case 5:
+	                equipped[5] = secondWep = null;
+	                break;
+	            default:
+	                backpackIterator.remove();
+	        }
+	    }
 	}
 }
