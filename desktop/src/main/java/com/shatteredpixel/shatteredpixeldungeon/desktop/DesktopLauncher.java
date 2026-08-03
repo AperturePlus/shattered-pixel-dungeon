@@ -123,7 +123,10 @@ public class DesktopLauncher {
 		try {
 			Game.versionCode = Integer.parseInt(DesktopLauncher.class.getPackage().getImplementationVersion());
 		} catch (NumberFormatException e) {
-			Game.versionCode = Integer.parseInt(System.getProperty("Implementation-Version"));
+			String versionCodeStr = System.getProperty("Implementation-Version");
+			if (versionCodeStr != null) {
+				Game.versionCode = Integer.parseInt(versionCodeStr);
+			}
 		}
 
 		if (UpdateImpl.supportsUpdates()){
