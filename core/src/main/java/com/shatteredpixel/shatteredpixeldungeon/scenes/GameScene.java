@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.badlogic.gdx.Input;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -44,6 +45,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Ghoul;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
+import com.shatteredpixel.shatteredpixeldungeon.debug.CheatService;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BannerSprites;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
@@ -111,6 +113,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndBag;
+import com.shatteredpixel.shatteredpixeldungeon.windows.WndCheatConsole;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndInfoCell;
@@ -127,6 +130,7 @@ import com.watabou.gltextures.TextureCache;
 import com.watabou.glwrap.Blending;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.KeyBindings;
+import com.watabou.input.KeyEvent;
 import com.watabou.input.PointerEvent;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
@@ -148,6 +152,7 @@ import com.watabou.utils.Point;
 import com.watabou.utils.PointF;
 import com.watabou.utils.Random;
 import com.watabou.utils.RectF;
+import com.watabou.utils.Signal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -157,6 +162,7 @@ import java.util.Locale;
 public class GameScene extends PixelScene {
 
 	static GameScene scene;
+	private Signal.Listener<KeyEvent> cheatConsoleListener;
 
 	private SkinnedBlock water;
 	private DungeonTerrainTilemap tiles;
@@ -240,6 +246,15 @@ public class GameScene extends PixelScene {
 		float largeInsetTop = Game.platform.getSafeInsets(PlatformSupport.INSET_LRG).scale(1f/defaultZoom).top;
 
 		scene = this;
+		if (CheatService.isAvailable()) {
+			KeyEvent.addKeyListener(cheatConsoleListener = event -> {
+				if (event.pressed && event.code == Input.Keys.GRAVE && !showingWindow()) {
+					show(new WndCheatConsole());
+					return true;
+				}
+				return false;
+			});
+		}
 
 		terrain = new Group();
 		add( terrain );
@@ -776,6 +791,10 @@ public class GameScene extends PixelScene {
 
 		Emitter.freezeEmitters = false;
 		
+		if (cheatConsoleListener != null) {
+			KeyEvent.removeKeyListener(cheatConsoleListener);
+			cheatConsoleListener = null;
+		}
 		scene = null;
 		Badges.saveGlobal();
 		Journal.saveGlobal();
