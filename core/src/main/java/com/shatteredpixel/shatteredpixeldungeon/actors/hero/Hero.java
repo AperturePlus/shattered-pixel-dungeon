@@ -253,17 +253,21 @@ public class Hero extends Char {
 	
 	public void updateHT( boolean boostHP ){
 		int curHT = HT;
-		
-		HT = 20 + 5*(lvl-1) + HTBoost;
+
+		long updatedHT = 20L + 5L*(lvl-1);
 		float multiplier = RingOfMight.HTMultiplier(this);
-		HT = Math.round(multiplier * HT);
+		updatedHT = Math.round(multiplier * updatedHT);
 		
 		if (buff(ElixirOfMight.HTBoost.class) != null){
-			HT += buff(ElixirOfMight.HTBoost.class).boost();
+			updatedHT += buff(ElixirOfMight.HTBoost.class).boost();
 		}
+
+		updatedHT += HTBoost;
+		HT = (int)Math.max(1L, Math.min(Integer.MAX_VALUE, updatedHT));
 		
 		if (boostHP){
-			HP += Math.max(HT - curHT, 0);
+			HP = (int)Math.min(Integer.MAX_VALUE,
+					(long)HP + Math.max((long)HT - curHT, 0L));
 		}
 		HP = Math.min(HP, HT);
 	}
