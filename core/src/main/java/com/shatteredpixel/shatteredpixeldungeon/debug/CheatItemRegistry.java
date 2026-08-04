@@ -27,14 +27,21 @@ import java.util.Locale;
 
 public final class CheatItemRegistry {
 
+	public enum Group {
+		EQUIPMENT,
+		CONSUMABLE
+	}
+
 	public static final class Entry {
 		public final String id;
 		public final Catalog category;
+		public final Group group;
 		public final Class<? extends Item> itemClass;
 
 		private Entry(String id, Catalog category, Class<? extends Item> itemClass) {
 			this.id = id;
 			this.category = category;
+			this.group = Catalog.equipmentCatalogs.contains(category) ? Group.EQUIPMENT : Group.CONSUMABLE;
 			this.itemClass = itemClass;
 		}
 
@@ -80,13 +87,19 @@ public final class CheatItemRegistry {
 	}
 
 	public static synchronized List<Entry> search(String query) {
+		return search(query, null);
+	}
+
+	public static synchronized List<Entry> search(String query, Group group) {
 		ensureInitialized();
 		String normalized = query == null ? "" : query.trim().toLowerCase(MessagesLocale.locale());
+		String normalizedId = query == null ? "" : query.trim().toLowerCase(Locale.ENGLISH);
 		ArrayList<Entry> result = new ArrayList<>();
 		for (Entry entry : entries.values()) {
-			if (normalized.isEmpty()
-					|| entry.id.contains(normalized)
-					|| entry.displayName().toLowerCase(MessagesLocale.locale()).contains(normalized)) {
+			if ((group == null || entry.group == group) && (normalized.isEmpty()
+					|| entry.id.contains(normalizedId)
+					|| entry.displayName().toLowerCase(MessagesLocale.locale()).contains(normalized)
+					|| entry.category.title().toLowerCase(MessagesLocale.locale()).contains(normalized))) {
 				result.add(entry);
 			}
 		}

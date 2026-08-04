@@ -299,6 +299,11 @@ public class MagesStaff extends MeleeWeapon {
 		return wand != null ? wand.getClass() : null;
 	}
 
+	/** Returns the imbued wand so item inspectors can read its persistent state. */
+	public Wand wand(){
+		return wand;
+	}
+
 	@Override
 	public Item upgrade(boolean enchant) {
 		super.upgrade( enchant );
