@@ -1,0 +1,35 @@
+{
+    // Java 语言服务相关设置（vscode-java / Java 扩展包）
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "C:/Program Files/Microsoft/jdk-21.0.8.9-hotspot",
+            "default": true
+        },
+        {
+            "name": "JavaSE-17",
+            "path": "C:/Program Files/Microsoft/jdk-17.0.16.8-hotspot"
+        }
+    ],
+
+    // Gradle 9.4 要求 JDK 17+，工程源码兼容级别为 Java 11，JDK 21 可正常编译
+    "java.import.gradle.enabled": true,
+    "java.import.gradle.wrapper.enabled": true,
+    "java.import.gradle.jvmArguments": [
+        "-Dfile.encoding=UTF-8"
+    ],
+
+    // 调试控制台：LWJGL 游戏需要看到 stdout 输出，使用集成终端
+    "java.debug.settings.console": "integratedTerminal",
+    "java.debug.settings.showHex": false,
+
+    // 语言服务器内存
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m",
+
+    // 忽略构建产物目录，降低文件监视开销
+    "files.watcherExclude": {
+        "**/build/**": true,
+        "**/.gradle/**": true
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        // Java 开发全家桶（语言服务 + 调试器 + 测试运行器）
+        "vscjava.vscode-java-pack",
+        // Gradle 任务浏览器与构建支持
+        "vscjava.vscode-gradle"
+    ]
+}

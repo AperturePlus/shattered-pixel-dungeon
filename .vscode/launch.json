@@ -1,0 +1,62 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // ============================================================
+        // 方案一（推荐）：Gradle debug 任务 + 远程附加调试
+        // 与官方 `./gradlew :desktop:debug` 行为完全一致（含系统属性），
+        // 由 preLaunchTask 以 --debug-jvm 启动游戏并挂起等待调试器，
+        // 输出监听「Listening for transport dt_socket at address: 5005」后自动附加。
+        // 停止调试只会断开调试器，游戏进程仍在运行；终止游戏请停止终端中的 Gradle 任务。
+        // ============================================================
+        {
+            "name": "Desktop: Gradle 调试 (attach :5005)",
+            "type": "java",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "desktop:debug (debug-jvm)"
+        },
+
+        // ============================================================
+        // 方案二：直接启动（不经过 Gradle 任务）
+        // 依赖 vscode-java 语言服务解析 desktop 工程 classpath，
+        // preLaunchTask 先执行 :desktop:build 编译并把 core/desktop 的 assets
+        // 拷贝到 desktop/build/resources/main。
+        // vmArgs 复刻 desktop/build.gradle 中 debug 任务的 systemProperty，
+        // 注意：DesktopLauncher 用 Specification-Title / Implementation-Title 拼装
+        // Windows 存档路径（AppData/Roaming/.shatteredpixel/<title>/），不可省略；
+        // 版本号若与 gradle.properties 不一致需同步更新。
+        // ============================================================
+        {
+            "name": "Desktop: 直接启动",
+            "type": "java",
+            "request": "launch",
+            "mainClass": "com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher",
+            "preLaunchTask": "desktop:build",
+            "vmArgs": [
+                "-DSpecification-Title=Shattered Pixel Dungeon",
+                "-DImplementation-Title=com.shatteredpixel.shatteredpixeldungeon",
+                "-DSpecification-Version=3.3.8-INDEV",
+                "-DImplementation-Version=896"
+            ],
+            "shortenCommandLine": "auto",
+            "console": "integratedTerminal"
+        },
+
+        // ============================================================
+        // Android：连接真机/模拟器上的调试进程
+        // 使用步骤：
+        //   1. 运行任务「android:installDebug」安装并启动调试包
+        //   2. 获取进程 PID：adb shell pidof com.shatteredpixel.shatteredpixeldungeon
+        //   3. 端口转发：  adb forward tcp:8700 jdwp:<PID>
+        //   4. F5 选择本配置
+        // ============================================================
+        {
+            "name": "Android: 附加到设备 (jdwp:8700)",
+            "type": "java",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 8700
+        }
+    ]
+}

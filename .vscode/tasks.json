@@ -1,0 +1,168 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ============================================================
+        // Desktop 调试：以 --debug-jvm 启动游戏并挂起，等待调试器附加
+        // （供 launch.json 中「Desktop: Gradle 调试」作 preLaunchTask 使用）
+        // ============================================================
+        {
+            "label": "desktop:debug (debug-jvm)",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                ":desktop:debug",
+                "--debug-jvm"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "java",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005"
+                }
+            }
+        },
+
+        // 直接运行游戏（不调试，等价于 ./gradlew :desktop:debug）
+        {
+            "label": "desktop:run",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                ":desktop:debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+
+        // 编译 desktop 模块（编译 + 拷贝 core/desktop 资源），供直接启动用
+        {
+            "label": "desktop:build",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                ":desktop:build",
+                "-x",
+                "test"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "java",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }
+        },
+
+        // 全模块构建（不含测试）
+        {
+            "label": "build all",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                "build",
+                "-x",
+                "test"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": {
+                "owner": "java",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }
+        },
+
+        // 清理
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+
+        // Android：安装调试包到已连接的设备/模拟器
+        {
+            "label": "android:installDebug",
+            "type": "shell",
+            "command": "${workspaceFolder}/gradlew",
+            "windows": {
+                "command": "${workspaceFolder}/gradlew.bat"
+            },
+            "args": [
+                ":android:installDebug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": {
+                "owner": "java",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(error|warning):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }
+        }
+    ]
+}
